@@ -1,7 +1,7 @@
 
 
 
-# `leuven`
+# The `leuven` library and framework
 
 The `leuven` library provides a very simple **framework** for facilitating the `C/C++` implementation of machine learning, optimisation related and other algorithms, **that relies heavily on manipulating** (multi dimensional) **data by** using **linear algebra**:
 
@@ -29,87 +29,107 @@ Building the `leuven` library requires:
 
 > :warning: **Warning!** While the following might work well, it gives very little or no control on what BLAS/LAPACK implementation is pick up and will be used by the `leuven` library. Since the performance (as well as the provided flexibility) of the library, strongly depends on the available and selected BLAS/LAPACK options, it is **strongly recommended to install and specify explicitly** the BLAS/LAPACK implementation related configurations as shown in the [BLAS/LAPACK options](doc) section of the documentation.
 
-  
-When BLAS/LAPACK libraries are installed at one of the standard location of the system (e.g. `/usr/local/lib64, /usr/local/lib, /usr/lib64, /usr/lib, etc.`, one can skip the explicit specification of the required BLAS/LAPACK implementation during the `cmake` configuration of the `leuven` library since the required libraries will be searched under these standard locations automatically in this case. So one can perform the following steps from the `leuven` main directory to install the library:
-
-Create a `build` directory where all the configuration and build related objects, files will be placed
-  
+    bash-3.2$ git clone https://github.com/mnovak42/leuven.git
+    bash-3.2$ cd leuven
     bash-3.2$ mkdir build
-
-Change to the previously created build directory and generate the make files with the given configurations (`-DCMAKE_INSTALL_PREFIX` `cmake` configuration option specifies the location where the final product will be installed e.g. my `/Users/mnovak/opt/leuven1` directory in this case)
-
     bash-3.2$ cd build/
-    bash-3.2$ cmake -DCMAKE_INSTALL_PREFIX=/Users/mnovak/opt/leuven1 ../
-    -- The C compiler identification is AppleClang 10.0.0.10001145
-    -- The CXX compiler identification is AppleClang 10.0.0.10001145
-    -- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc
-    -- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc -- works
-    -- Detecting C compiler ABI info
-    -- Detecting C compiler ABI info - done
-    -- Detecting C compile features
-    -- Detecting C compile features - done
-    -- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
-    -- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ -- works
-    -- Detecting CXX compiler ABI info
-    -- Detecting CXX compiler ABI info - done
-    -- Detecting CXX compile features
-    -- Detecting CXX compile features - done
-    -- ===== WRAPPER ===== 
-    -- Building with the FBLAS Wrapper
-
-    -- ==== The selected CPU BLAS Option = NETLIB-BLAS  ==== 
-    --  
-    -- ========  NETLIB BLAS (or any BLAS) ======= 
-    --  WAS FOUND = TRUE
-    -- NETLIB BLAS LIBRARY = /usr/lib/libblas.dylib;/usr/lib/liblapack.dylib
-    --  
-    -- ===== CHECKING CPU BLAS WRAPPER AND LIBRARY CONSISTENCY =====
-    --  
-    -- ===== Setting up the leuven library =====
-     
-    -- ===== Adding the lssvm part ===== 
-
-    -- Configuring done
-    -- Generating done
-    
-Build the `leuven` library 
-
-    bash-3.2$ make 
-    Scanning dependencies of target leuven
-    [ 50%] Building CXX object utils/CMakeFiles/leuven.dir/src/FBLAS.cc.o
-    [100%] Linking CXX static library ../lib/libleuven.a
-    [100%] Built target leuven
-
-and install, together with the headers and configurations files, to the location specified by the `-DCMAKE_INSTALL_PREFIX` `cmake` configuration option.  
-
-
+    bash-3.2$ cmake -DCMAKE_INSTALL_PREFIX=/where/to/install ../
+    bash-3.2$ make -j4
     bash-3.2$ make install
-    [100%] Built target leuven
-    Install the project...
-    -- Install configuration: "Release"
-    -- Installing: /Users/mnovak/opt/leuven1/includes/Matrix.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/cxxopts.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/definitions.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/types.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/FBLAS.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/XBLAS.tpp
-    -- Installing: /Users/mnovak/opt/leuven1/includes/FBLAS.h
-    -- Installing: /Users/mnovak/opt/leuven1/includes/FBLAS.tpp
-    -- Up-to-date: /Users/mnovak/opt/leuven1/includes/definitions.hh
-    -- Installing: /Users/mnovak/opt/leuven1/lib/libleuven.a
-    -- Installing: /Users/mnovak/opt/leuven1/lib/cmake/leuven/leuvenConfig.cmake
-    -- Installing: /Users/mnovak/opt/leuven1/includes/IncCholesky.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/Kernels.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/IncCholesky.tpp
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KernelChi2.tpp
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KernelRBF.tpp
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KernelSSK.tpp
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM_AMS.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM_BAS.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM_BLF.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KscWkpcaIChol.hh
-    -- Installing: /Users/mnovak/opt/leuven1/includes/KscWkpcaIChol.tpp
+
+**A bit of details**:
+
+When BLAS/LAPACK libraries are installed at one of the standard location of the system (e.g. `/usr/local/lib64, /usr/local/lib, /usr/lib64, /usr/lib, etc.`, one can skip the explicit specification of the required BLAS/LAPACK implementation during the `cmake` configuration of the `leuven` library since the required libraries will be searched under these standard locations automatically in this case. So after cloning and entering to the main `leuven` directory 
+
+    bash-3.2$ git clone https://github.com/mnovak42/leuven.git
+    Cloning into 'leuven'...
+    remote: Enumerating objects: 300, done.
+    remote: Counting objects: 100% (300/300), done.
+    remote: Compressing objects: 100% (239/239), done.
+    remote: Total 300 (delta 60), reused 282 (delta 52), pack-reused 0
+    Receiving objects: 100% (300/300), 46.29 MiB | 10.64 MiB/s, done.
+    Resolving deltas: 100% (60/60), done.
+
+one can perform the following steps to install the library:
+
+1. Create a `build` directory where all the configuration and build related objects, files will be placed
+  
+       bash-3.2$ mkdir build
+
+2. Change to the previously created build directory and generate the make files with the given configurations (`-DCMAKE_INSTALL_PREFIX` `cmake` configuration option specifies the location where the final product will be installed e.g. my `/Users/mnovak/opt/leuven1` directory in this case)
+
+       bash-3.2$ cd build/
+       bash-3.2$ cmake -DCMAKE_INSTALL_PREFIX=/Users/mnovak/opt/leuven1 ../
+       -- The C compiler identification is AppleClang 10.0.0.10001145
+       -- The CXX compiler identification is AppleClang 10.0.0.10001145
+       -- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc
+       -- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc -- works
+       -- Detecting C compiler ABI info
+       -- Detecting C compiler ABI info - done
+       -- Detecting C compile features
+       -- Detecting C compile features - done
+       -- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++
+       -- Check for working CXX compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++ -- works
+       -- Detecting CXX compiler ABI info
+       -- Detecting CXX compiler ABI info - done
+       -- Detecting CXX compile features
+       -- Detecting CXX compile features - done
+       -- ===== WRAPPER ===== 
+       -- Building with the FBLAS Wrapper
+
+       -- ==== The selected CPU BLAS Option = NETLIB-BLAS  ==== 
+       --  
+       -- ========  NETLIB BLAS (or any BLAS) ======= 
+       --  WAS FOUND = TRUE
+       -- NETLIB BLAS LIBRARY = /usr/lib/libblas.dylib;/usr/lib/liblapack.dylib
+       --  
+       -- ===== CHECKING CPU BLAS WRAPPER AND LIBRARY CONSISTENCY =====
+       --  
+       -- ===== Setting up the leuven library =====
+
+       -- ===== Adding the lssvm part ===== 
+
+       -- Configuring done
+       -- Generating done
+    
+3. Build the `leuven` library 
+
+       bash-3.2$ make 
+       Scanning dependencies of target leuven
+       [ 50%] Building CXX object utils/CMakeFiles/leuven.dir/src/FBLAS.cc.o
+       [100%] Linking CXX static library ../lib/libleuven.a
+       [100%] Built target leuven
+
+4. and install, together with the headers and configurations files, to the location specified by the `-DCMAKE_INSTALL_PREFIX` `cmake` configuration option.  
 
 
- 
+       bash-3.2$ make install
+       [100%] Built target leuven
+       Install the project...
+       -- Install configuration: "Release"
+       -- Installing: /Users/mnovak/opt/leuven1/includes/Matrix.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/cxxopts.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/definitions.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/types.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/FBLAS.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/XBLAS.tpp
+       -- Installing: /Users/mnovak/opt/leuven1/includes/FBLAS.h
+       -- Installing: /Users/mnovak/opt/leuven1/includes/FBLAS.tpp
+       -- Up-to-date: /Users/mnovak/opt/leuven1/includes/definitions.hh
+       -- Installing: /Users/mnovak/opt/leuven1/lib/libleuven.a
+       -- Installing: /Users/mnovak/opt/leuven1/lib/cmake/leuven/leuvenConfig.cmake
+       -- Installing: /Users/mnovak/opt/leuven1/includes/IncCholesky.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/Kernels.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/IncCholesky.tpp
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KernelChi2.tpp
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KernelRBF.tpp
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KernelSSK.tpp
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM_AMS.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM_BAS.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KscEncodingAndQM_BLF.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KscWkpcaIChol.hh
+       -- Installing: /Users/mnovak/opt/leuven1/includes/KscWkpcaIChol.tpp
+
+
+
