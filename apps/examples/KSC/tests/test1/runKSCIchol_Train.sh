@@ -1,0 +1,19 @@
+../../bin/KscIchol_Train \
+--icholTolError 0.85 \
+--icholMaxRank 500 \
+--icholRBFKernelPar 2.0e-03 \
+--icholRedSetFile out/ReducedSetData.dat \
+--icholPermVectFile out/PermutationVector.dat \
+--trDataNumber 10000 \
+--trDataDimension 2 \
+--trDataFile data/data_Train_N10000.dat \
+--clNumber 10 \
+--clRBFKernelPar 0.001 \
+--clEncodingScheme AMS \
+--clEvalOutlierThrs 100 \
+--clEvalWBalance 0.5 \
+--clLevel 1 \
+--clResFile out/CRes.dat \
+--clResDataFile out/CData.dat \
+--verbosityLevel 2 \
+--numBLASThreads 4 

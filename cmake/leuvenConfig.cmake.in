@@ -1,0 +1,54 @@
+# simple configuration file: a better one is below using the exported target
+# NOTE: that we need to chaneg the main CMAKE in order to have this "NICER" one
+#
+set(leuven_INSTALL_DIR "@CMAKE_INSTALL_PREFIX@")
+
+set(leuven_LIB_DIR "@CMAKE_INSTALL_PREFIX@/lib")
+
+find_path(leuven_INCLUDE_DIR NAMES types.hh HINTS "@CMAKE_INSTALL_PREFIX@/includes" NO_DEFAULT_PATH)
+
+find_library(leuven_LIBRARY NAMES libleuven.a PATHS "${leuven_LIB_DIR}" NO_DEFAULT_PATH)
+#find_library(Ksc_LIBRARY NAMES libksc.a PATHS "${leuven_LIB_DIR}" NO_DEFAULT_PATH)
+
+set (leuven_LIBRARIES
+  ${leuven_LIBRARY}
+  ${Ksc_LIBRARY}
+)
+
+set (CPU_BLAS_LIBRARY "@CPU_BLAS_LIBRARY@")
+set (CPU_BLAS_INCLUDE_DIR "@CPU_BLAS_INCLUDE_DIR@")
+
+set (CUDA_LIBRARIES "@CUDA_LIBRARIES@;@CUDA_cudart_static_LIBRARY@;@CUDA_CUBLAS_LIBRARIES@;@CUDA_cusolver_LIBRARY@")
+set (CUDA_INCLUDE_DIR "@CUDA_INCLUDE_DIRS@")
+set (CUDA_NVCC_FLAGS_leuven "@CUDA_NVCC_FLAGS@")
+set (USE_CUBLAS "@USE_CUBLAS@")
+
+set (leuven_INCLUDE_DIR "${leuven_INCLUDE_DIR};${CPU_BLAS_INCLUDE_DIR};${CUDA_INCLUDE_DIR}")  
+set (leuven_LIBRARIES   "${leuven_LIBRARIES};${CPU_BLAS_LIBRARY};${CUDA_LIBRARIES}")
+
+set (FORTRAN_COMPILER_REQUIRED "@FORTRAN_COMPILER_REQUIRED@")
+
+set (leuven_CMAKE_CXX_FLAGS "@leuven_CMAKE_CXX_FLAGS@")
+
+
+# remove all white spaces
+string(REGEX REPLACE "\n$" "" leuven_INCLUDE_DIR "${leuven_INCLUDE_DIR}")
+string(REGEX REPLACE "\n$" "" leuven_LIBRARIES "${leuven_LIBRARIES}")
+
+
+###
+### NICER SOLUTION TO HANDLE DEPENDENCIES: target must be exported for this in the cmake
+### - the current project include_DIR (ONLY) will be in @PROJECTNAME@_INCLUDE_DIR
+### - the current project library (ONLY) will be in @PROJECTNAME@_LIBRARIES
+#@PACKAGE_INIT@
+#
+#SET (@PROJECTNAME@_FOUND TRUE)
+#
+## - Define standard variables:
+#
+#set (@PROJECTNAME@_LIBRARIES @PROJECTNAME@)
+#set (@PROJECTNAME@_INCLUDE_DIR @CMAKE_INSTALL_PREFIX@/includes)
+#
+## - Include the targets file to create the imported targets that a client can
+##   use in their project (headers) and link to (libraries). 
+#include ("${CMAKE_CURRENT_LIST_DIR}/@PROJECTNAME@Targets.cmake")

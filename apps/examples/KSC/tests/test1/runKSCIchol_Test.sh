@@ -1,0 +1,18 @@
+../../bin/KscIchol_Test \
+--icholTolError 0.85 \
+--icholMaxRank 500 \
+--icholRBFKernelPar 2.0e-03 \
+--trDataNumber 10000 \
+--trDataDimension 2 \
+--trDataFile data/data_Train_N10000.dat \
+--tstDataNumber 100000 \
+--tstDataFile data/data.dat \
+--clNumber 10 \
+--clRBFKernelPar 0.001 \
+--clEncodingScheme AMS \
+--clEvalWBalance 0.5 \
+--clEvalOutlierThrs 100 \
+--clLevel 1 \
+--clResFile out/CRes.dat \
+--verbosityLevel 2 \
+--numBLASThreads 4 

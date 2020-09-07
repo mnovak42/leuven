@@ -1,0 +1,18 @@
+../../bin/KscIchol_Tune \
+--icholTolError 0.85 \
+--icholMaxRank 500 \
+--icholRBFKernelPar 2.0e-03 \
+--trDataNumber 10000 \
+--trDataDimension 2 \
+--trDataFile data/data_Train_N10000.dat \
+--valDataNumber 10000 \
+--valDataFile data/data_Valid_N10000.dat \
+--minClusterNumber 3 \
+--maxClusterNumber 20 \
+--kernelParameters 1.e-05,1.2649e-05,1.5999e-05,2.0236e-05,2.5595e-05,3.2375e-05,4.0949e-05,5.1795e-05,6.5513e-05,8.2864e-05,1.0481e-04,1.3257e-04,1.6768e-04,2.121e-04,2.6827e-04,3.3932e-04,4.2919e-04,5.4287e-04,6.8665e-04,8.6851e-04,1.0985e-03,1.3895e-03,1.7575e-03,2.223e-03,2.8118e-03,3.5565e-03,4.4984e-03,5.6899e-03,7.1969e-03,9.103e-03,1.1514e-02,1.4563e-02,1.8421e-02,2.33e-02,2.9471e-02,3.7276e-02,4.7149e-02,5.9636e-02,7.5431e-02,9.541e-02,1.2068e-01,1.5264e-01,1.9307e-01,2.4421e-01,3.0888e-01,3.9069e-01,4.9417e-01,6.2506e-01,7.9060e-01,1.e+00 \
+--clEvalOutlierThrs 100 \
+--clEncodingScheme AMS \
+--clEvalWBalance 0.5 \
+--verbosityLevel 2 \
+--numBLASThreads 4 \
+--resFile out/TuningRes.dat 

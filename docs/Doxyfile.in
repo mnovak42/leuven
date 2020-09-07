@@ -1,0 +1,26 @@
+PROJECT_NAME         = "climate"
+OUTPUT_DIRECTORY     = "doxygen"
+XML_OUTPUT           = "xml"
+INPUT                = ../lssvm/
+CITE_BIB_FILES       = source/bibfile
+EXTENSION_MAPPING    = tpp=C++
+FILE_PATTERNS        = *.tpp *.hh
+GENERATE_LATEX       = NO
+GENERATE_MAN         = NO
+GENERATE_RTF         = NO
+CASE_SENSE_NAMES     = NO
+GENERATE_HTML        = YES
+GENERATE_XML         = YES
+RECURSIVE            = YES
+QUIET                = YES
+JAVADOC_AUTOBRIEF    = YES
+EXTRACT_PRIVATE      = YES
+EXTRACT_STATIC       = YES
+SHOW_FILES           = YES
+SHOW_NAMESPACES      = YES
+WARN_IF_UNDOCUMENTED = NO
+EXTRA_PACKAGES       = amsmath xr amsfonts
+ALIASES = "rst=\verbatim embed:rst"
+ALIASES += "endrst=\endverbatim"
+ALIASES += "rststar=\verbatim embed:rst:leading-asterisk"
+ALIASES += "endrststar=\endverbatim"
