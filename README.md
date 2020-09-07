@@ -3,7 +3,9 @@
 
 # The `leuven` library and framework
 
-The `leuven` library provides a very simple **framework** for facilitating the `C/C++` implementation of machine learning, optimisation related and other algorithms, **that relies heavily on manipulating** (multi dimensional) **data by** using **linear algebra**:
+## Short descrition
+
+The `leuven` library provides a very simple **framework for facilitating the `C/C++` implementation of** machine learning, optimisation related and other **algorithms, that relies heavily on manipulating** (multi dimensional) **data by** using **linear algebra**:
 
  - a very **lightweight matrix** for representing array like (e.g. vector, matrix) with **generic data types** supporting **both row- and column-major memory layouts** (see more at the [On the lightweight matrix implementation](On-the-lightweight-matrix-implementation) section of the [Introduction](Introduction))
  - interfaces for **CPU BLAS/LAPACK** implementation routines to manipulate the underlying data (see more at the [On the BLAS/LAPACK support](On-the-BLAS/LAPACK-support) of the [Introduction](Introduction))
@@ -39,7 +41,7 @@ Building the `leuven` library requires:
 
 **A bit of details**:
 
-When BLAS/LAPACK libraries are installed at one of the standard location of the system (e.g. `/usr/local/lib64, /usr/local/lib, /usr/lib64, /usr/lib, etc.`, one can skip the explicit specification of the required BLAS/LAPACK implementation during the `cmake` configuration of the `leuven` library since the required libraries will be searched under these standard locations automatically in this case. So after cloning and entering to the main `leuven` directory 
+When BLAS/LAPACK libraries are installed at one of the standard location of the system (e.g. `/usr/local/lib64, /usr/local/lib, /usr/lib64, /usr/lib, etc.`, one can skip the explicit specification of the required BLAS/LAPACK implementation during the `cmake` configuration of the `leuven` library since the required libraries will be searched under these standard locations automatically in this case. So after cloning  
 
     bash-3.2$ git clone https://github.com/mnovak42/leuven.git
     Cloning into 'leuven'...
@@ -49,6 +51,10 @@ When BLAS/LAPACK libraries are installed at one of the standard location of the 
     remote: Total 300 (delta 60), reused 282 (delta 52), pack-reused 0
     Receiving objects: 100% (300/300), 46.29 MiB | 10.64 MiB/s, done.
     Resolving deltas: 100% (60/60), done.
+
+and entering to the main `leuven` directory 
+
+    bash-3.2$ cd leuven
 
 one can perform the following steps to install the library:
 
