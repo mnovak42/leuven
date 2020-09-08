@@ -12,7 +12,7 @@
 #include <cuda_runtime.h> //only for cuda_status
 
 //
-// IS'T A GPU ONLY A=QR factorization AND QR multiplication
+// IT'S A GPU ONLY A=QR factorization AND QR multiplication
 //
 // Same as test_xgeqrf but the back-subsitution i.e. QR multiplication is also 
 // done on the GPU:
@@ -29,6 +29,8 @@
 // - the GetBackA matrix, that stores the result of the multiplication, is 
 //   copied back (with the matrix A and vector TAU just to see them)
 //
+
+#define min(x,y) (((x) < (y)) ? (x) : (y))
 
 #define M 6
 #define N 2

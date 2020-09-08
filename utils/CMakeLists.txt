@@ -291,7 +291,6 @@ list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/global/definitions.hh)
 
 
 
-
 ################################################################################
 # Build the library 
 ################################################################################
@@ -300,9 +299,11 @@ message (STATUS "${Green}===== Setting up the ${PROJECTNAME} library =====${Colo
 if (USE_CUBLAS)
   enable_language(CUDA)
   SET (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} 
-       -Xcompiler -fPIC -Xcudafe 
-       --diag_suppress=boolean_controlling_expr_is_constant
-#       --disable-warnings
+       -Xcompiler 
+       -fPIC 
+       -Xcudafe 
+       --diag_suppress=boolean_controlling_expr_is_constant 
+       --disable-warnings
        -lineinfo"
   )
   file (GLOB CUDASOURCES ${CMAKE_SOURCE_DIR}/utils/src/CUBLAS.cu)
@@ -311,12 +312,14 @@ if (USE_CUBLAS)
   #
   cuda_add_library(${PROJECTNAME} STATIC ${CXXSOURCES} ${CUDASOURCES})
   set_property(TARGET ${PROJECTNAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-  target_link_libraries(${PROJECTNAME} ${CPU_BLAS_LIBRARY} ${CUDA_LIBRARIES} 
-                      ${CUDA_cudart_static_LIBRARY} ${CUDA_CUBLAS_LIBRARIES} 
+  target_link_libraries(${PROJECTNAME} ${CPU_BLAS_LIBRARY} ${CUDA_LIBRARY} 
+                      ${CUDA_cudart_static_LIBRARY} ${CUDA_CUBLAS_LIBRARY} 
                       ${CUDA_cusolver_LIBRARY})
+  set_target_properties(${PROJECTNAME} PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})                      
 else ()
   add_library(${PROJECTNAME} STATIC ${CXXSOURCES})
   target_link_libraries(${PROJECTNAME} ${CPU_BLAS_LIBRARY}) 
+  set_target_properties(${PROJECTNAME} PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})
 endif ()
 
 ### ALSO for the NICER SOLUTION TO HANDLE DEPENDENCIES (see below)
@@ -356,7 +359,19 @@ install (FILES
     DESTINATION lib/cmake/${PROJECTNAME}
 )
 
+###############################################################################
+#  Set some global properties for testing 
+#
+FILE ( COPY ${CXXHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/includes)
+set (leuven_INCLUDE_DIR "${CMAKE_BINARY_DIR}/includes")
 
+set_property(GLOBAL PROPERTY CPU_BLAS_LIBRARY_PROP      "${CPU_BLAS_LIBRARY}")
+set_property(GLOBAL PROPERTY CPU_BLAS_INCLUDE_DIR_PROP  "${CPU_BLAS_INCLUDE_DIR}")
 
+set_property(GLOBAL PROPERTY CUDA_LIBRARIES_PROP   "${CUDA_LIBRARIES} ${CUDA_cudart_static_LIBRARY} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY}")
+set_property(GLOBAL PROPERTY CUDA_INCLUDE_DIRS_PROP  "${CUDA_INCLUDE_DIRS}")
+set_property(GLOBAL PROPERTY CUDA_NVCC_FLAGS_leuven_PROP "${CUDA_NVCC_FLAGS}")
+set_property(GLOBAL PROPERTY CPU_BLAS_INCLUDE_DIR_PROP  "${CPU_BLAS_INCLUDE_DIR}")
 
+set_property(GLOBAL PROPERTY leuven_INCLUDE_DIR_PROP  "${leuven_INCLUDE_DIR};${CPU_BLAS_INCLUDE_DIR};${CUDA_INCLUDE_DIRS}")
 

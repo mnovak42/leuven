@@ -9,6 +9,7 @@
 #include "types.hh"
 #include "Matrix.hh"
 
+#define min(x,y) (((x) < (y)) ? (x) : (y))
 
 #define M 6
 #define N 2

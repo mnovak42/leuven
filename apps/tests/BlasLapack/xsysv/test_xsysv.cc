@@ -10,6 +10,8 @@
 #include "types.hh"
 #include "Matrix.hh"
 
+#define min(x,y) (((x) < (y)) ? (x) : (y))
+
 #define N 5
 #define NRHS 3
 
@@ -146,7 +148,7 @@ int main() {
   gettimeofday(&start, NULL); 
 
 #if defined(USE_CUBLAS) && defined(ON_GPU) 
-        printf("\n ---- XGESV ( ?GETRF+?GETRS LAPACK-SOLVER: AX = B) starts on GPU"\n);
+        printf("\n ---- XGESV ( ?GETRF+?GETRS LAPACK-SOLVER: AX = B) starts on GPU\n");
         theBlas_gpu.XGESV(A_d, B_d);
 #else
         printf("\n ---- XSYSV (LAPACK-SOLVER: AX = B) starts on CPU\n");

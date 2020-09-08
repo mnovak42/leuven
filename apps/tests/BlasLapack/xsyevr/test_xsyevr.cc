@@ -10,6 +10,8 @@
 #include "types.hh"
 #include "Matrix.hh"
 
+#define min(x,y) (((x) < (y)) ? (x) : (y))
+
 #define N 5      // dimensions of the square input matrix 
 #define NEIGEN 3 // number of requested eigenvalues/eigenvectors
 

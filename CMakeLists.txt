@@ -48,13 +48,12 @@ endif (CMAKE_BUILD_TYPE STREQUAL "" AND NOT CMAKE_CXX_FLAGS MATCHES "-O[123]")
 
 
 
-
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++11 -pthread")
 #set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -W -Wall -O3 -std=c++11 -pthread -march=native -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
-set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -W -Wall -O3 -std=c++11 -pthread -march=native")
+set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -W -Wall -O3 -std=c++11 -pthread -march=native")
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -W -Wall -O0 -std=c++11 -pthread -g")
 
 
@@ -68,7 +67,8 @@ else ()
     set (leuven_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
 endif (NOT CMAKE_BUILD_TYPE)
 
-
+set (CMAKE_CXX_FLAGS "${leuven_CMAKE_CXX_FLAGS}")
+message(STATUS ${CMAKE_CXX_FLAGS_RELEASE})
 
 ###
 ## The user needs to chose a CPU BLAS implementation available on their system.
@@ -99,4 +99,17 @@ endif (NOT CMAKE_BUILD_TYPE)
 ################################################################################
 add_subdirectory (utils)
 add_subdirectory (lssvm)
+
+
+################################################################################
+# Add testing ...
+################################################################################
+option (BUILD_TESTS "Build test programs" OFF)
+if (BUILD_TESTS)
+  message (STATUS "Building test programs is enabled!")
+  message (STATUS "${Green}===== Add testing ===== ${ColourReset}")
+  enable_testing ()
+  add_subdirectory (testing)
+endif ()
+
 
