@@ -30,7 +30,7 @@
 #define USE_ATLAS_BLAS 0
 #define USE_NETLIB_BLAS 0
 #define USE_CBLAS_WRAPPER 1
-#define USE_CUBLAS 1
+#define USE_CUBLAS 0
 
 #if USE_CBLAS_WRAPPER
   const bool kRowMajorPossible = true;

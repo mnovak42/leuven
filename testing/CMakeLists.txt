@@ -32,14 +32,15 @@ foreach (tname ${UNIT_TESTS})
 endforeach ()
 
 
-
-add_executable (test_xgeqrf_v2 ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/test_xgeqrf_v2.cu)
-add_test       (xgeqrf_v2  test_xgeqrf_v2 )
-# 
-target_include_directories (test_xgeqrf_v2 PUBLIC "${leuven_INCLUDE_DIR}")
 if (USE_CUBLAS)
-  target_link_libraries (test_xgeqrf_v2 ${PROJECTNAME} ${CUDA_LIBRARIES})
-  target_compile_options (test_xgeqrf_v2 PUBLIC "-DON_GPU=ON")
-  
-  set_property(TARGET test_xgeqrf_v2 PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+  add_executable (test_xgeqrf_v2 ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/test_xgeqrf_v2.cu)
+  add_test       (xgeqrf_v2  test_xgeqrf_v2 )
+  # 
+  target_include_directories (test_xgeqrf_v2 PUBLIC "${leuven_INCLUDE_DIR}")
+  if (USE_CUBLAS)
+    target_link_libraries (test_xgeqrf_v2 ${PROJECTNAME} ${CUDA_LIBRARIES})
+    target_compile_options (test_xgeqrf_v2 PUBLIC "-DON_GPU=ON")
+    
+    set_property(TARGET test_xgeqrf_v2 PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+  endif ()
 endif ()
