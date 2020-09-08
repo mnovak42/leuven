@@ -464,8 +464,8 @@ int FBLAS::XSYEVR(Matrix<T>& A,  Matrix<T>& EIGENVALS, Matrix<T>& EIGENVECTS,
   char RANGE = (whichEigenValue==0  ? 'A' : (whichEigenValue==1 ? 'V' : 'I'));
   // Make sure that the EIGENVECTS matrix has proper dimensions
   assert ( N==EIGENVECTS.GetNumRows() && "\n*** CBLAS::XSYEVR: EIGENVECTS matrix should have same number of row as the input square matrix A. ***\n");                  
-  assert ( whichEigenValue==0 && N==EIGENVECTS.GetNumCols() && "\n*** CBLAS::XSYEVR: EIGENVECTS matrix should have enough cols to store the N eigenvectors.(all eigens was required). ***\n");                  
-  assert ( whichEigenValue==2 && (iU-iL+1)>=EIGENVECTS.GetNumCols() && "\n*** CBLAS::XSYEVR: EIGENVECTS matrix should have enough cols to store the iU-iL+1 eigenvectors. ***\n");                  
+//  assert ( !(whichEigenValue==0 && N==EIGENVECTS.GetNumCols()) && "\n*** CBLAS::XSYEVR: EIGENVECTS matrix should have enough cols to store the N eigenvectors.(all eigens was required). ***\n");                  
+//  assert ( !(whichEigenValue==2 && (iU-iL+1)>=EIGENVECTS.GetNumCols()) && "\n*** CBLAS::XSYEVR: EIGENVECTS matrix should have enough cols to store the iU-iL+1 eigenvectors. ***\n");                  
   // Leading dimension of matrix EIGENVECTS
   int LDZ   = EIGENVECTS.GetNumRows();
   // Both eignevalues and corresponding eigenvectors are required in this method
