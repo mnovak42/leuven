@@ -72,7 +72,7 @@ jobs:
       env:
         cuda: ${{ matrix.cuda }}
       run: |
-        source ./scripts/actions/install_cuda_ubuntu.sh
+        source ./testing/scripts/actions/install_cuda_ubuntu.sh
         if [[ $? -eq 0 ]]; then
           # Set paths for subsequent steps, using ${CUDA_PATH}
           echo "Adding CUDA to CUDA_PATH, PATH and LD_LIBRARY_PATH"
