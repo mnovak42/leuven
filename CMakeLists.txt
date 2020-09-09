@@ -14,6 +14,11 @@ SET (PROJECTNAME "leuven")
 SET (LIBNAME "lib${PROJECTNAME}")
 project (${PROJECTNAME}) #  LANGUAGES CXX CUDA)
 
+# find available thread libraries and prefer pthreads 
+set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set (THREADS_PREFER_PTHREAD_FLAG TRUE) 
+find_package (Threads)
+
 # ensure out of source build 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
    message (FATAL_ERROR 
