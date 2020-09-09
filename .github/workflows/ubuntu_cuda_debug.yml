@@ -128,4 +128,4 @@ jobs:
       working-directory: ${{ env.build_dir }}
       shell: bash
       # Execute tests defined by the CMake configuration.  
-      run: ctest -C ${{ env.config }}
+      run: ctest --verbose -C ${{ env.config }}
