@@ -58,7 +58,7 @@ jobs:
     # setting the `build` directory name and `build type` of the environment
     env:
       build_dir: "build" # here we might change ot "${{runner.workspace}}/build"
-      config: "Debug"
+      config: "Release"
     
     # checkout a copy of the repository to the runner
     steps:
