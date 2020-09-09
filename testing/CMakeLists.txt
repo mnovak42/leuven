@@ -1,16 +1,29 @@
+################################################################################
+## Testing of the leuven library and framework
+################################################################################
 
+## ----------------------------------------------------------------------------
+## Retrieve configuration i.e. dependencies locations set at the end of 'utils'
+## ----------------------------------------------------------------------------
 
-
+# CPU BLAS/LAPACK libraries and possible include dirs
 get_property(CPU_BLAS_LIBRARY        GLOBAL PROPERTY  CPU_BLAS_LIBRARY_PROP)
 get_property(CPU_BLAS_INCLUDE_DIR    GLOBAL PROPERTY  CPU_BLAS_INCLUDE_DIR_PROP)
 
+# CUDA libraries, include dirs and nvcc compiler flags
 get_property(CUDA_LIBRARIES          GLOBAL PROPERTY CUDA_LIBRARIES_PROP)
 get_property(CUDA_INCLUDE_DIRS       GLOBAL PROPERTY CUDA_INCLUDE_DIRS_PROP)
 get_property(CUDA_NVCC_FLAGS_leuven  GLOBAL PROPERTY CUDA_NVCC_FLAGS_leuven_PROP)
 get_property(CPU_BLAS_INCLUDE_DIR    GLOBAL PROPERTY CPU_BLAS_INCLUDE_DIR_PROP)
 
+# all (i.e. the leuven, CPU and CUDA BLAS/LAPACK) include directories
 get_property(leuven_INCLUDE_DIR      GLOBAL PROPERTY leuven_INCLUDE_DIR_PROP)
 
+
+## ----------------------------------------------------------------------------
+## Add some unit tests for CPU/CUDA BLAS/LAPACK interface testing 
+## ----------------------------------------------------------------------------
+  
 set (UNIT_TESTS "xgemm" "xgeqrf" "xgesvd" "xsyevr" "xsysv")
 
 if (USE_CUBLAS)

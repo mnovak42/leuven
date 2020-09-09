@@ -1,9 +1,10 @@
 ################################################################################
-# Add source, header files & include directories
+# Add source, header files & include directories to the leuven framework.
 ################################################################################
 
-################################################################################
+## ----------------------------------------------------------------------------
 # Add some project sources headers and set include directories
+## ----------------------------------------------------------------------------
 file (GLOB CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/global/*.hh)
 include_directories (${CMAKE_SOURCE_DIR}/utils/inc ${CMAKE_SOURCE_DIR}/utils/inc/global)
 message (STATUS "${Green}===== WRAPPER ===== ${ColourReset}")
@@ -19,11 +20,9 @@ else ()
 endif ()
 message ("")
 
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
 
-unset (CPU_BLAS_LIBRARY CACHE)
 ################################################################################
 # CPU BLAS options:
 # ------------------------------------------------------------------------------
@@ -44,8 +43,13 @@ unset (CPU_BLAS_LIBRARY CACHE)
 # the above 4 options (number of threads depend on what the actual BLAS is).  
 ################################################################################
 
-## CPU BLAS option selection:
-#
+## ------------------------------------------------------------------------------
+## Define options for (explicit) CPU BLAS/LAPACK
+## ------------------------------------------------------------------------------
+
+unset (CPU_BLAS_LIBRARY CACHE)
+
+# CPU BLAS option selection:
 unset (USE_MKL_BLAS CACHE)
 unset (USE_OPEN_BLAS CACHE)
 unset (USE_ATLAS_BLAS CACHE)
@@ -85,7 +89,7 @@ message (STATUS " ")
 # - the MKLROOT environment variable 
 # - try /opt/intel/mkl location
 ################################################################################
-# option (USE_MKL_BLAS "Use Intel(R) MKL BLAS implementation for CPU BLAS support" OFF)
+
 if (USE_MKL_BLAS AND NOT CPU_BLAS_LIBRARY)
   message (STATUS "${Green}========  MKL ======= ${ColourReset}")
   find_package (MKL REQUIRED)
@@ -122,7 +126,7 @@ endif (USE_MKL_BLAS AND NOT CPU_BLAS_LIBRARY)
 # the OpenBlas include directory is not found an explicit error will be generated
 # and user will advice to use the FBLAS wrapper instead.  
 ################################################################################
-# option (USE_OPEN_BLAS "Use OpenBLAS BLAS implementation for CPU BLAS support" OFF)
+
 if (USE_OPEN_BLAS AND NOT CPU_BLAS_LIBRARY)
   message (STATUS "${Green}========  OpenBLAS ======= ${ColourReset}") 
   find_package (OpenBLAS REQUIRED)
@@ -154,6 +158,7 @@ endif (USE_OPEN_BLAS AND NOT CPU_BLAS_LIBRARY)
 # - then the AtlasBLASROOT environment variable (set as above)
 # - many standard locations as (/usr/lib; /opt/usr/local/lib; etc.)
 ################################################################################
+
 if (USE_ATLAS_BLAS AND NOT CPU_BLAS_LIBRARY)
   message (STATUS "${Green}========  ATLAS BLAS ======= ${ColourReset}") 
   find_package (AtlasBLAS REQUIRED)
@@ -185,6 +190,7 @@ endif (USE_ATLAS_BLAS AND NOT CPU_BLAS_LIBRARY)
 # the CBLAS wrapper option, an explicit error will be generated and the user is
 # advised to use the FBLAS wrapper instead. 
 ################################################################################
+
 if (USE_NETLIB_BLAS AND NOT CPU_BLAS_LIBRARY)
   message (STATUS "${Green}========  NETLIB BLAS (or any BLAS) ======= ${ColourReset}") 
   find_package (NETLIB_BLAS REQUIRED)
@@ -201,10 +207,12 @@ if (USE_NETLIB_BLAS AND NOT CPU_BLAS_LIBRARY)
 endif (USE_NETLIB_BLAS AND NOT CPU_BLAS_LIBRARY)
 
 
-################################################################################
-# check if CPU BLAS library was found: if  CPU_BLAS_LIBRARY was set 
-# check if CBLAS Wrapper can be used: if  CPU_BLAS_INCLUDE_DIR was set 
-# Check if the proper wrapper is used 
+## ----------------------------------------------------------------------------
+## check if CPU BLAS library was found: if  CPU_BLAS_LIBRARY was set 
+## check if CBLAS Wrapper can be used: if  CPU_BLAS_INCLUDE_DIR was set 
+## check if the proper wrapper is used 
+## ----------------------------------------------------------------------------
+
 message (STATUS "${Green}===== CHECKING CPU BLAS WRAPPER AND LIBRARY CONSISTENCY =====${ColourReset}")
 if (CPU_BLAS_LIBRARY)
   if (USE_CBLAS_WRAPPER AND NOT CPU_BLAS_INCLUDE_DIR)
@@ -231,9 +239,10 @@ endif (CPU_BLAS_LIBRARY)
 message (STATUS " ")
 
 
-################################################################################
-# See if Fortran compiler (linking) is needed for the application 
-################################################################################
+## ----------------------------------------------------------------------------
+## See if Fortran compiler (linking) is needed for the application 
+## ----------------------------------------------------------------------------
+
 unset(FORTRAN_COMPILER_REQUIRED CACHE)
 if (NOT USE_MKL_BLAS)
   set (FORTRAN_COMPILER_REQUIRED true)
@@ -245,7 +254,7 @@ endif (NOT USE_MKL_BLAS)
 ################################################################################
 # GPU BLAS options: 
 # ------------------------------------------------------------------------------
-# Optional ....can be cuBLAS, or ...
+# Optional ....can be cuBLAS only at the moment
 #
 ################################################################################
 
@@ -257,6 +266,7 @@ endif (NOT USE_MKL_BLAS)
 # one can specify the CUDA toolkit location by the CUDA_TOOLKIT_ROOT_DIR. See 
 # more details in the CMake/Modules/FindCUDA.cmake file.
 ################################################################################
+
 option (USE_CUBLAS "Use NVIDIA cuBLAS implementation for GPU BLAS support" OFF)
 if (USE_CUBLAS)
   message (STATUS "${Green}========  CUDA, cuBLAS ======= ${ColourReset}")
@@ -277,25 +287,27 @@ if (USE_CUBLAS)
 endif (USE_CUBLAS)
 
 
-#list (APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC; -Xcudafe "--diag_suppress=boolean_controlling_expr_is_constant")
-
-
-
 ################################################################################
-# Generate "definitions.hh" configuration file and add to the include files:
-#  - this will contain all the CMake configuration options used at build time
+## Setting up the library with the selected CPU/GPU BLAS/LAPACK configurations
+## and install 
 ################################################################################
+
+## ----------------------------------------------------------------------------
+## Generate "definitions.hh" configuration file and add to the include files:
+## - this will contain all the CMake configuration options used at build time
+## ----------------------------------------------------------------------------
+
 configure_file (${CMAKE_SOURCE_DIR}/cmake/definitions.hh.in
     ${CMAKE_CURRENT_SOURCE_DIR}/inc/global/definitions.hh @ONLY)
 list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/global/definitions.hh)
 
 
 
-################################################################################
-# Build the library 
-################################################################################
-message (STATUS "${Green}===== Setting up the ${PROJECTNAME} library =====${ColourReset}")
+## ----------------------------------------------------------------------------
+## Setting up the library
+## ----------------------------------------------------------------------------
 
+message (STATUS "${Green}===== Setting up the ${PROJECTNAME} library =====${ColourReset}")
 if (USE_CUBLAS)
   enable_language(CUDA)
   SET (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} 
@@ -308,7 +320,6 @@ if (USE_CUBLAS)
   )
   file (GLOB CUDASOURCES ${CMAKE_SOURCE_DIR}/utils/src/CUBLAS.cu)
   list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/CUBLAS.hh ${CMAKE_SOURCE_DIR}/utils/inc/CUBLAS.tpp)
-#  include_directories(${CMAKE_SOURCE_DIR}/utils/inc)
   #
   cuda_add_library(${PROJECTNAME} STATIC ${CXXSOURCES} ${CUDASOURCES})
   set_property(TARGET ${PROJECTNAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
@@ -334,9 +345,10 @@ endif ()
 #
 message (" ")
 
-################################################################################
-# Install: project headers, library and export target (dependencies)
-#
+## ----------------------------------------------------------------------------
+## Install: project headers, library and export target (dependencies)
+## ----------------------------------------------------------------------------
+
 install (FILES ${CXXHEADERS} DESTINATION includes)
 install (TARGETS ${PROJECTNAME} DESTINATION lib)
 ###
@@ -348,9 +360,6 @@ install (TARGETS ${PROJECTNAME} DESTINATION lib)
 # install (EXPORT ${PROJECTNAME}Targets DESTINATION lib/cmake/${PROJECTNAME})
 # export(PACKAGE ${PROJECTNAME})
 
-##################################################################
-# Generate & install project cmake config
-#
 configure_file (${CMAKE_SOURCE_DIR}/cmake/${PROJECTNAME}Config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECTNAME}Config.cmake @ONLY)
 
@@ -359,19 +368,25 @@ install (FILES
     DESTINATION lib/cmake/${PROJECTNAME}
 )
 
+
 ###############################################################################
-#  Set some global properties for testing 
-#
+##  Set some global properties for retrieving proper configuration at testing 
+###############################################################################
+
+
+# local directory in the build for the header files
 FILE ( COPY ${CXXHEADERS} DESTINATION ${CMAKE_BINARY_DIR}/includes)
 set (leuven_INCLUDE_DIR "${CMAKE_BINARY_DIR}/includes")
 
+# CPU BLAS/LAPACK libraries and possible include dirs
 set_property(GLOBAL PROPERTY CPU_BLAS_LIBRARY_PROP      "${CPU_BLAS_LIBRARY}")
 set_property(GLOBAL PROPERTY CPU_BLAS_INCLUDE_DIR_PROP  "${CPU_BLAS_INCLUDE_DIR}")
 
+# CUDA libraries, include dirs and nvcc compiler flags
 set_property(GLOBAL PROPERTY CUDA_LIBRARIES_PROP   "${CUDA_LIBRARIES} ${CUDA_cudart_static_LIBRARY} ${CUDA_CUBLAS_LIBRARIES} ${CUDA_cusolver_LIBRARY}")
 set_property(GLOBAL PROPERTY CUDA_INCLUDE_DIRS_PROP  "${CUDA_INCLUDE_DIRS}")
 set_property(GLOBAL PROPERTY CUDA_NVCC_FLAGS_leuven_PROP "${CUDA_NVCC_FLAGS}")
-set_property(GLOBAL PROPERTY CPU_BLAS_INCLUDE_DIR_PROP  "${CPU_BLAS_INCLUDE_DIR}")
 
+# all (i.e. the leuven, CPU and CUDA BLAS/LAPACK) include directories
 set_property(GLOBAL PROPERTY leuven_INCLUDE_DIR_PROP  "${leuven_INCLUDE_DIR};${CPU_BLAS_INCLUDE_DIR};${CUDA_INCLUDE_DIRS}")
 
