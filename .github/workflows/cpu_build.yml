@@ -17,78 +17,78 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
 
-      strategy:
-      fail-fast: false
-      # set up the os and compiler combinations to test 
-      matrix:
-        # populate the .name matrix 
-        name: [
-          ubuntu-20.04-gcc-9,
-          ubuntu-18.04-gcc-8,
-          ubuntu-18.04-gcc-7,
-          macOS-10.15-gcc-9,
-          macOS-10.14-gcc-9,
-          macOS-10.14-gcc-8,
-          macOS-10.15-xcode-11.6,
-          macOS-10.15-xcode-11.1,
-          macOS-10.14-xcode-11.2,
-          macOS-10.14-xcode-10.0
-        ]
-        # populate the .os matrix  
-        include:
-            ## Ubuntu + gcc
-          - name: ubuntu-20.04-gcc-9  
-            os: ubuntu-20.04
-            compiler: gcc
-            version: "9"
+    strategy:
+    fail-fast: false
+    # set up the os and compiler combinations to test 
+    matrix:
+      # populate the .name matrix 
+      name: [
+        ubuntu-20.04-gcc-9,
+        ubuntu-18.04-gcc-8,
+        ubuntu-18.04-gcc-7,
+        macOS-10.15-gcc-9,
+        macOS-10.14-gcc-9,
+        macOS-10.14-gcc-8,
+        macOS-10.15-xcode-11.6,
+        macOS-10.15-xcode-11.1,
+        macOS-10.14-xcode-11.2,
+        macOS-10.14-xcode-10.0
+      ]
+      # populate the .os matrix  
+      include:
+          ## Ubuntu + gcc
+        - name: ubuntu-20.04-gcc-9  
+          os: ubuntu-20.04
+          compiler: gcc
+          version: "9"
 
-          - name: ubuntu-18.04-gcc-8  
-            os: ubuntu-18.04
-            compiler: gcc
-            version: "8"
+        - name: ubuntu-18.04-gcc-8  
+          os: ubuntu-18.04
+          compiler: gcc
+          version: "8"
 
-          - name: ubuntu-18.04-gcc-7  
-            os: ubuntu-18.04
-            compiler: gcc
-            version: "7"
-            
-            ## MacOS + gcc
-          - name: macOS-10.15-gcc-9  
-            os: macOS-10.15
-            compiler: gcc
-            version: "9"
+        - name: ubuntu-18.04-gcc-7  
+          os: ubuntu-18.04
+          compiler: gcc
+          version: "7"
 
-          - name: macOS-10.14-gcc-9  
-            os: macOS-10.14
-            compiler: gcc
-            version: "9"
+          ## MacOS + gcc
+        - name: macOS-10.15-gcc-9  
+          os: macOS-10.15
+          compiler: gcc
+          version: "9"
 
-          - name: macOS-10.14-gcc-8  
-            os: macOS-10.14
-            compiler: gcc
-            version: "8"
+        - name: macOS-10.14-gcc-9  
+          os: macOS-10.14
+          compiler: gcc
+          version: "9"
 
-            ## MacOS + clang            
-          - name: macOS-10.15-xcode-11.6  
-            os: macOS-10.15
-            compiler: xcode
-            version: "11.6"
-            
-          - name: macOS-10.15-xcode-11.1  
-            os: macOS-10.15
-            compiler: xcode
-            version: "11.1"
-            
-          - name: macOS-10.14-xcode-11.2  
-            os: macOS-10.14
-            compiler: xcode
-            version: "11.2"
-            
-          - name: macOS-10.14-xcode-10.0  
-            os: macOS-10.14
-            compiler: xcode
-            version: "10"
-            
+        - name: macOS-10.14-gcc-8  
+          os: macOS-10.14
+          compiler: gcc
+          version: "8"
+
+          ## MacOS + clang            
+        - name: macOS-10.15-xcode-11.6  
+          os: macOS-10.15
+          compiler: xcode
+          version: "11.6"
+
+        - name: macOS-10.15-xcode-11.1  
+          os: macOS-10.15
+          compiler: xcode
+          version: "11.1"
+
+        - name: macOS-10.14-xcode-11.2  
+          os: macOS-10.14
+          compiler: xcode
+          version: "11.2"
+
+        - name: macOS-10.14-xcode-10.0  
+          os: macOS-10.14
+          compiler: xcode
+          version: "10"
+
     steps:
       - uses: actions/checkout@v2
 
@@ -106,7 +106,7 @@ jobs:
         if: runner.os = 'macOS'
         run: |
           brew install cmake ninja
-          
+
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             brew install gcc@${{ matrix.version }}
             echo "::set-env name=CC::gcc-${{ matrix.version }}"
