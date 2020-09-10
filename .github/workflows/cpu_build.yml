@@ -92,7 +92,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install (Linux)
-        if: runner.os = 'Linux'
+        if: runner.os == 'Linux'
         run: |
           # it's always gcc compiler in case of Linux so just protect for future
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
@@ -102,7 +102,7 @@ jobs:
           fi
 
       - name: Install (MacOS)
-        if: runner.os = 'macOS'
+        if: runner.os == 'macOS'
         run: |
           brew install cmake ninja
 
