@@ -20,17 +20,6 @@ get_property(CPU_BLAS_INCLUDE_DIR    GLOBAL PROPERTY CPU_BLAS_INCLUDE_DIR_PROP)
 get_property(leuven_INCLUDE_DIR      GLOBAL PROPERTY leuven_INCLUDE_DIR_PROP)
 
 
-# import CPU BLAS/LAPACK and CUDA librararies
-#add_library(CPU_BLAS_LIBS STATIC IMPORTED)
-#set_target_properties(CPU_BLAS_LIBS PROPERTIES IMPORTED_LOCATION "${CPU_BLAS_LIBRARY}")
-
-
-#add_library(CUDA_LIBS STATIC IMPORTED)
-#set_target_properties(CUDA_LIBS PROPERTIES IMPORTED_LOCATION "${CUDA_LIBRARIES}")
-
-
-message(STATUS "here = ${PROJECTNAME} ${CUDA_LIBRARIES}")
-
 ## ----------------------------------------------------------------------------
 ## Add some unit tests for CPU/CUDA BLAS/LAPACK interface testing 
 ## ----------------------------------------------------------------------------

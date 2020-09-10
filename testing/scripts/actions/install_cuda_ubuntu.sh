@@ -1,3 +1,8 @@
+## 
+## THIS SCRIPT IS DEVELOPED BY PETER HEYWOOD AND TAKEN FROM 
+## https://github.com/ptheywood/cuda-cmake-github-actions
+##
+
 # @todo - better / more robust parsing of inputs from env vars.
 ## -------------------
 ## Constants
