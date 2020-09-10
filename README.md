@@ -1,4 +1,4 @@
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mnovak42/leuven/cpu-build?label=leuven%3A%20CPU-build%20%26%20test&logo=GitHub&logoColor=blue&style=plastic)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mnovak42/leuven/cpu-build?label=leuven%3A%20CPU-build%20%26%20tests&logo=GitHub&logoColor=blue&style=plastic)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mnovak42/leuven/CUDA-ubuntu-build?label=leuven%3A%20CUDA%20build&logo=GitHub&logoColor=blue&style=plastic)
 
 # The `leuven` library and framework
