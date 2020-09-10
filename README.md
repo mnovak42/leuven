@@ -1,4 +1,4 @@
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mnovak42/leuven/cmake?label=leuven%20CPU-build%20and%20tests&style=plastic)
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mnovak42/leuven/cpu-build?label=leuven%20CPU-build%20and%20tests&style=plastic)
 
 # The `leuven` library and framework
 
