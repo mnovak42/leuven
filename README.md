@@ -8,15 +8,15 @@
 
 The `leuven` library provides a very simple **framework for facilitating the `C/C++` implementation of** machine learning, optimisation related and other **algorithms, that relies heavily on manipulating** (multi dimensional) **data by** using **linear algebra**:
 
- - a very **lightweight matrix** for representing array like (e.g. vector, matrix) with **generic data types** supporting **both row- and column-major memory layouts** (see more at the [On the lightweight matrix implementation](On-the-lightweight-matrix-implementation) section of the [Introduction](Introduction))
- - interfaces for **CPU BLAS/LAPACK** implementation routines to manipulate the underlying data (see more at the [On the BLAS/LAPACK support](On-the-BLAS/LAPACK-support) of the [Introduction](Introduction))
- - same interfaces for **GPU (CUDA) BLAS/LAPACK** implementations as options (see more at the [On the CUDA support](On-the-CUDA-support) section of the [Introduction](Introduction))  
+ - a very **lightweight matrix** for representing array like (e.g. vector, matrix) with **generic data types** supporting **both row- and column-major memory layouts** (see more at the [On the lightweight matrix implementation](https://leuven.readthedocs.io/en/latest/main/introduction.html#on-the-lightweight-matrix-implementation) section of the [Documentation](https://leuven.readthedocs.io/en/latest/))
+ - interfaces for **CPU BLAS/LAPACK** implementation routines to manipulate the underlying data (see more at the [On the BLAS/LAPACK support](On-the-BLAS/LAPACK-support) of the [Documentation](https://leuven.readthedocs.io/en/latest/))
+ - same interfaces for **GPU (CUDA) BLAS/LAPACK** implementations as options (see more at the [On the CUDA support](On-the-CUDA-support) section of the [Documentation](https://leuven.readthedocs.io/en/latest/))  
  
  
  The library also servers **as a toolkit**, since already **contains the implementation of the components of some machine learning algorithms**. While these components can be used by the end-users to create their own applications, **ready-to-use, complete machine learning applications are
  also provided** by the developers as example applications of the toolkit.
 
- See more details in the [Documentation](doc).
+ See more details in the [Documentation](https://leuven.readthedocs.io/en/latest/).
 
 
 ## Requirements
@@ -25,12 +25,12 @@ Building the `leuven` library requires:
 
  - a `c/c++` compiler, with `c++11` support e.g. `GCC >= 4.9` or `clang >= 3.1`, to be installed on the system (even a `Fortran` compiler might be needed when other than `Intel MKL` is used as CPU BLAS/LAPACK option)
  - `CMake` to be installed on the system. `CMake` is used for managing (option configuration, locate dependencies etc.) the build process (see at http://www.cmake.org/).
- - the `leuven` library heavily relies on BLAS/LAPACK functionalities so `BLAS` and `LAPACK libraries` must to be installed on the system. It is **strongly recommended to use** one of the freely available, **optimised implementations such as** the **`Intel MKL`, `OpenBLAS`** or **`ATLAS`** (see more at the [Build and install](doc) section of the documentation).
+ - the `leuven` library heavily relies on BLAS/LAPACK functionalities so `BLAS` and `LAPACK libraries` must to be installed on the system. It is **strongly recommended to use** one of the freely available, **optimised implementations such as** the **`Intel MKL`, `OpenBLAS`** or **`ATLAS`** (see more at the [Build and install](doc) section of the [Documentation](https://leuven.readthedocs.io/en/latest/)).
 
 
 ## Quick (and dirty) start
 
-> :warning: **Warning!** While the following might work well, it gives very little or no control on what BLAS/LAPACK implementation is pick up and will be used by the `leuven` library. Since the performance (as well as the provided flexibility) of the library, strongly depends on the available and selected BLAS/LAPACK options, it is **strongly recommended to install and specify explicitly** the BLAS/LAPACK implementation related configurations as shown in the [BLAS/LAPACK options](doc) section of the documentation.
+> :warning: **Warning!** While the following might work well, it gives very little or no control on what BLAS/LAPACK implementation is pick up and will be used by the `leuven` library. Since the performance (as well as the provided flexibility) of the library, strongly depends on the available and selected BLAS/LAPACK options, it is **strongly recommended to install and specify explicitly** the BLAS/LAPACK implementation related configurations as shown in the [BLAS/LAPACK options](https://leuven.readthedocs.io/en/latest/main/install.html) section of the [Documentation](https://leuven.readthedocs.io/en/latest/).
 
     bash-3.2$ git clone https://github.com/mnovak42/leuven.git
     bash-3.2$ cd leuven
