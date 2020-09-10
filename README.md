@@ -30,7 +30,7 @@ Building the `leuven` library requires:
 
 ## Quick (and dirty) start
 
-> :warning: **Warning!** While the following might work well, it gives very little or no control on what BLAS/LAPACK implementation is pick up and will be used by the `leuven` library. Since the performance (as well as the provided flexibility) of the library, strongly depends on the available and selected BLAS/LAPACK options, it is **strongly recommended to install and specify explicitly** the BLAS/LAPACK implementation related configurations as shown in the [BLAS/LAPACK options](https://leuven.readthedocs.io/en/latest/main/install.html#on-the-blas-lapack-dependence) section of the [Build and install](https://leuven.readthedocs.io/en/latest/main/install.html#) of the [Documentation](https://leuven.readthedocs.io/en/latest/).
+> :warning: **Warning!** While the following might work well, it gives very little or no control on what BLAS/LAPACK implementation is pick up and will be used by the `leuven` library. Since the performance (as well as the provided flexibility) of the library, strongly depends on the available and selected BLAS/LAPACK options, it is **strongly recommended to install and specify explicitly** the BLAS/LAPACK implementation related configurations as shown in the [BLAS/LAPACK options](https://leuven.readthedocs.io/en/latest/main/install.html#blas-lapack-options) section of the [Build and install](https://leuven.readthedocs.io/en/latest/main/install.html#) of the [Documentation](https://leuven.readthedocs.io/en/latest/).
 
     bash-3.2$ git clone https://github.com/mnovak42/leuven.git
     bash-3.2$ cd leuven
