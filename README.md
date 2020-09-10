@@ -2,6 +2,9 @@
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/mnovak42/leuven/CUDA-ubuntu-build?label=leuven%3A%20CUDA%20build&logo=GitHub&logoColor=blue&style=plastic)
 ![Read the Docs](https://img.shields.io/readthedocs/leuven?label=leuven%3A%20doc%20&style=plastic)
 
+![Read the Docs](https://img.shields.io/readthedocs/leuven-ksc?label=applications-KSC%3A%20doc)
+
+
 # The `leuven` library and framework
 
 ## Short descrition
@@ -14,7 +17,7 @@ The `leuven` library provides a very simple **framework for facilitating the `C/
  
  
  The library also servers **as a toolkit**, since already **contains the implementation of the components of some machine learning algorithms**. While these components can be used by the end-users to create their own applications, **ready-to-use, complete machine learning applications are
- also provided** by the developers as example applications of the toolkit.
+ also provided** by the developers as example applications of the toolkit (see the **sparse Kernel Spectral Clustering (KSC)** examples under `apps/examples/KSC` sub-directory with the corresponding [KSC-documentation](https://leuven-ksc.readthedocs.io/en/latest/).
 
  See more details in the [Documentation](https://leuven.readthedocs.io/en/latest/).
 
