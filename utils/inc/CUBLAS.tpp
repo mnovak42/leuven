@@ -4,17 +4,11 @@
 // This file is included into CUBLAS.hh
 //
 
-#include <cstdio>
-
 #include <cuda_runtime.h>
 
 template < class T >
 void CUBLAS::Malloc ( Matrix<T>& m ) {
   cudaError_t cudaError;
-  size_t free = 0;
-  size_t total = 0;
-  cudaMemGetInfo	(	&free, &total);
-  printf(" free = %u out of the total = %u", free, total );
   cudaError = cudaMalloc ( m.GetDataPtrAdrs(), m.GetSize()*sizeof( T ) );
   assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );
   _unused (cudaError);
