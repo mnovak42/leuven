@@ -6,13 +6,15 @@ on:
       - 'README.md'
       - '.github/**' 
       - 'docs/**' 
+      - '*.yml'
     branches:
       - master
   pull_request:
     paths-ignore: 
       - 'README.md'
       - '.github/**'
-      - 'docs/**'     
+      - 'docs/**'
+      - '*.yml'      
     branches: 
       - master
 
