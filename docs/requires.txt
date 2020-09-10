@@ -1,4 +1,4 @@
-sphinx>=1.4
+sphinx>=3.0
 pygments>=2.4.1
 nbsphinx
 breathe
