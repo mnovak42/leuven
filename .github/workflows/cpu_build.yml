@@ -118,16 +118,16 @@ jobs:
           fi
 
       - name: Build & Test Debug
-         run: |
-           cmake -E remove_directory build
-           cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
-           cmake --build build
-           cd build && ctest -j2 --verbose --output-on-failure
+        run: |
+          cmake -E remove_directory build
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+          cmake --build build
+          cd build && ctest -j2 --verbose --output-on-failure
 
-       - name: Build & Test Release
-         run: |
-           cmake -E remove_directory build
-           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
-           cmake --build build
-           cd build && ctest -j2 --verbose --output-on-failure
+      - name: Build & Test Release
+        run: |
+          cmake -E remove_directory build
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
+          cmake --build build
+          cd build && ctest -j2 --verbose --output-on-failure
 
