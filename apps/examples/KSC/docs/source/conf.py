@@ -19,7 +19,7 @@ sys.path.append(os.path.abspath('.'))
 sys.path.append(os.path.abspath('../../tests/utils/'))
 sys.path.append(os.path.abspath('../../tests/test2/'))
 sys.path.append(os.path.abspath('../../tests/test3/'))
-
+sys.path.append(os.path.abspath('../../tests/utils/'))
 
 
 # call doxygen to generate the XML files

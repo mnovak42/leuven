@@ -4,10 +4,14 @@
 
 ![Read the Docs](https://img.shields.io/readthedocs/leuven-ksc?label=applications-KSC%3A%20doc)
 
+----
 
 # The `leuven` library and framework
 
-## Short descrition
+Framework, toolkit and ready-to-use applications for numerical linear algebra dependent machine learning algorithms. 
+
+
+## Short description
 
 The `leuven` library provides a very simple **framework for facilitating the `C/C++` implementation of** machine learning, optimisation related and other **algorithms, that relies heavily on manipulating** (multi dimensional) **data by** using **linear algebra**:
 
@@ -16,8 +20,7 @@ The `leuven` library provides a very simple **framework for facilitating the `C/
  - same interfaces for **GPU (CUDA) BLAS/LAPACK** implementations as options (see more at the [On the CUDA support](https://leuven.readthedocs.io/en/latest/main/introduction.html#on-the-cuda-support) section of the [Documentation](https://leuven.readthedocs.io/en/latest/))  
  
  
- The library also servers **as a toolkit**, since already **contains the implementation of the components of some machine learning algorithms**. While these components can be used by the end-users to create their own applications, **ready-to-use, complete machine learning applications are
- also provided** by the developers as example applications of the toolkit (see the **sparse Kernel Spectral Clustering (KSC)** examples under `apps/examples/KSC` sub-directory with the corresponding [KSC-documentation](https://leuven-ksc.readthedocs.io/en/latest/).
+ The library also servers **as a toolkit**, since already **contains the implementation of the components of some machine learning algorithms**. While these components can be utilised by the users to create their own applications, **ready-to-use, complete machine learning applications are also provided** by the developers as example applications of the toolkit. **Each** of these **example applications** has their own documentation and **can be built and used individually after the installation of the `leuven` library and framework**. See an example at ..
 
  See more details in the [Documentation](https://leuven.readthedocs.io/en/latest/).
 
@@ -43,7 +46,9 @@ Building the `leuven` library requires:
     bash-3.2$ make -j4
     bash-3.2$ make install
 
-**A bit of details**:
+<details>
+  <summary>Click to expand for some details!</summary>
+
 
 When BLAS/LAPACK libraries are installed at one of the standard location of the system (e.g. `/usr/local/lib64, /usr/local/lib, /usr/lib64, /usr/lib, etc.`, one can skip the explicit specification of the required BLAS/LAPACK implementation during the `cmake` configuration of the `leuven` library since the required libraries will be searched under these standard locations automatically in this case. So after cloning  
 
@@ -141,5 +146,28 @@ one can perform the following steps to install the library:
        -- Installing: /Users/mnovak/opt/leuven1/includes/KscWkpcaIChol.hh
        -- Installing: /Users/mnovak/opt/leuven1/includes/KscWkpcaIChol.tpp
 
+</details>
 
+
+## Example application: sparse Kernel Spectral Clustering on large scale data 
+
+**The `leuven` library** and toolkit **provides** the implementation of the **ingredients of a sparse Kernel Spectral Clustering (KSC) model** suitable for clustering large data sets. (The sparsity is achieved by the combination of the reduced-set method with the **incomplete Cholesky factorisation** based approximation **of the kernel matrix**.)
+
+**The `leuven` library** already **contains ready-to-use applications** for performing *hyper-parameter tuning*, *training* and *out-of-sample extension* of such a **sparse KSC** model. The codes, related to these example applications, are located under the `app/examples/KSC` directory. The applications can be built **after the installation of the `leuven` library**
+
+    bash-3.2$ cd apps/examples/KSC/
+    bash-3.2$ mkdir build
+    bash-3.2$ cd build/
+    bash-3.2$ cmake ../ -Dleuven_DIR=/where/leuven/is/installed/lib/cmake/leuven -DCMAKE_INSTALL_PREFIX=/where/to/install/
+    bash-3.2$ make
+    bash-3.2$ make install
+
+Note, that location of the previously installed `leuven` library (actually, the location of its `leuvenConfig.cmake` `CMake` configuration file) needs to be given to `CMake` in the `-Dleuven_DIR` configuration variable. 
+
+
+Each of the sub-directories of the `app/examples/` directory contains a set of related applications that can be built and used individually after the `leuven` library has already been installed on the system. 
+
+Applications for performing *hyper-parameter tuning*, *training* and *out-of-sample extension* of a **sparse KSC** model based on the **incomplete Cholesky factorisation  
+
+ (see the **sparse Kernel Spectral Clustering (KSC)** examples under `apps/examples/KSC` sub-directory with the corresponding [KSC-documentation](https://leuven-ksc.readthedocs.io/en/latest/). 
 
