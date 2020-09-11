@@ -27,7 +27,7 @@ subprocess.call('cd ..; doxygen Doxyfile.in', shell=True)
 
 # -- Project information -----------------------------------------------------
 
-project = 'Kernel Spectral Clustering'
+project = 'The leuven Library and Framework Documentation'
 copyright = '2020, M.Novak'
 author = 'Mihaly Novak'
 
@@ -55,7 +55,7 @@ extensions = [
 ]
 
 # set path to the doxygen-generated XML for breathe
-breathe_projects = { 'Kernel Spectral Clustering': '../doxygen/xml' }
+breathe_projects = { 'The leuven Library and Framework Documentation': '../doxygen/xml' }
 
 ##breathe_projects_source = {
 ##     "auto" : ( "../../", ["matrix_multiplication.c"] )
@@ -100,5 +100,6 @@ latex_elements = {
     \usepackage{bm}
     \usepackage{bbm}
   """,
+#  'fncychap': '\\usepackage[Conny]{fncychap}',
 #    \usepackage{mathtools}
 }

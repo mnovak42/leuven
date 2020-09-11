@@ -12,31 +12,31 @@ Here is how we can cite one of the details documents :ref:`seclabel-ICHOLDoc`
 
 
 .. doxygenclass:: KscEncodingAndQM
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/ksc/inc
    :members:
    :private-members:
    
 .. doxygenclass:: KscEncodingAndQM_BLF
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/ksc/inc
    :members:
    :private-members:
    
 .. doxygenclass:: KscEncodingAndQM_AMS
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/ksc/inc
    :members:
    :private-members:
 
 .. doxygenclass:: KscEncodingAndQM_BAS
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/ksc/inc
    :members:
    :private-members:
 
 .. doxygenclass:: KscWkpcaIChol
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/ksc/inc
    :members:
    :private-members:

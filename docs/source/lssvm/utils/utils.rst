@@ -12,19 +12,19 @@ Here is how we can cite one of the details documents :ref:`seclabel-ICHOLDoc`
 
 
 .. doxygenclass:: IncCholesky
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/utils/inc
    :members:
    :private-members:
 
 .. doxygenclass:: KernelBase
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/utils/inc
    :members:
    :private-members:
 
 .. doxygenclass:: KernelRBF
-   :project: Kernel Spectral Clustering
+   :project: The leuven Library and Framework Documentation
    :path: lssvm/utils/inc
    :members:
    :private-members:

@@ -1,6 +1,6 @@
 
-Kernel Spectral Clustering Documentation
-========================================
+The **:math:`leuven`** Library and Framework Documentation
+============================================================
 
 .. toctree::
    :maxdepth: 2

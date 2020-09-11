@@ -29,7 +29,7 @@ sys.path.append(os.path.abspath('../../tests/utils/'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Kernel Spectral Clustering - Example Applications'
+project = 'Sparse Kernel Spectral Clustering Applications - documentation and user guide'
 copyright = '2020, M.Novak'
 author = 'Mihaly Novak'
 
