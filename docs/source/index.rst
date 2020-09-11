@@ -1,5 +1,5 @@
 
-The :math:`leuven` Library and Framework Documentation
+The ``leuven`` Library and Framework Documentation
 ============================================================
 
 .. toctree::
