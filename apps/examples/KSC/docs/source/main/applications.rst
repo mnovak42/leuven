@@ -1,3 +1,5 @@
+.. _ksc_example_application_sec_doc:
+
 Example Applications
 =====================
 

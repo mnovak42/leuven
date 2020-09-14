@@ -103,8 +103,8 @@ public:
     const std::string description =
   "\n   Application that trains a sparse KSC model using a 1D RBF kernel on the\n\
    given training data set. The sparsity is achived with the combination of\n\
-   approximating the training set kernel matrix by its incomplete Cholesky\n\ 
-   factorisation (i.e. incomplete QR decomposition of the training data feature\n\ 
+   approximating the training set kernel matrix by its incomplete Cholesky\n\
+   factorisation (i.e. incomplete QR decomposition of the training data feature\n\
    map) and using the reduced set method.\n\n";
 
     if (fOptions) delete fOptions;

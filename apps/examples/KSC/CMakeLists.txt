@@ -5,25 +5,20 @@ cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
 
 
 #-------------------------------------------------------------------------------
-# Define LIBNAME as the library name which we are dependent on here 
+# Find the `leuven` library 
 #
-SET (LIBNAME "leuven")
-
-
-#-------------------------------------------------------------------------------
-# Find the library 
-#
-find_package (${LIBNAME} CONFIG REQUIRED)
-if (NOT ${LIBNAME}_FOUND)
-  message (FATAL_ERROR "${LIBNAME} was not found")
+find_package (leuven CONFIG REQUIRED)
+if (NOT leuven_FOUND)
+  message (FATAL_ERROR "`leuven` library was not found")
 endif ()
 
 
 #-------------------------------------------------------------------------------
-# Set the CXX flags that were used when building the library
+# Set the same CXX flags that were used when building the `leuven` library
 #
-set (CMAKE_CXX_FLAGS "${${LIBNAME}_CMAKE_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${leuven_CMAKE_CXX_FLAGS}")
 message(STATUS "CXX-FLAGS: ${CMAKE_CXX_FLAGS}")
+
 
 #-------------------------------------------------------------------------------
 # We need Fortran compiler (linking) in case of FBLAS-wrapper
@@ -34,25 +29,16 @@ endif (FORTRAN_COMPILER_REQUIRED)
 
 
 #-------------------------------------------------------------------------------
-# Option to use the GPU (only if the lib. was built with USE_CUDA)
-#
-option(ON_GPU "Option to make the test on GPU" OFF)
-if (USE_CUBLAS AND ON_GPU)
-   add_definitions(-DON_GPU)
-endif (USE_CUBLAS AND ON_GPU)
-
-
-#-------------------------------------------------------------------------------
-# Locate sources and headers for this project
+# Locate sources and headers for this project (add `leuven` include DIR as well)
 #
 include_directories (${PROJECT_SOURCE_DIR}/include
-                     ${${LIBNAME}_INCLUDE_DIR})
+                     ${leuven_INCLUDE_DIR})
 file (GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file (GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 
 #-------------------------------------------------------------------------------
-# Add the executable, and link it to the ${LIBNAME} libraries
+# Add the executable, and link it to the `leuven` libraries (all dependencies)
 #
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 #
@@ -60,13 +46,9 @@ add_executable (KscIchol_Train   KscIchol_Train.cc   ${sources} ${headers})
 add_executable (KscIchol_Tune    KscIchol_Tune.cc    ${sources} ${headers})
 add_executable (KscIchol_Test    KscIchol_Test.cc    ${sources} ${headers})
 #
-target_link_libraries (KscIchol_Train    ${${LIBNAME}_LIBRARIES})
-target_link_libraries (KscIchol_Tune     ${${LIBNAME}_LIBRARIES})
-target_link_libraries (KscIchol_Test     ${${LIBNAME}_LIBRARIES})
-#
-#set_property(TARGET KscIchol_Train   PROPERTY FOLDER "executable")
-#set_property(TARGET KscIchol_Tune    PROPERTY FOLDER "executable")
-#set_property(TARGET KscIchol_Test    PROPERTY FOLDER "executable")
+target_link_libraries (KscIchol_Train    ${leuven_LIBRARIES})
+target_link_libraries (KscIchol_Tune     ${leuven_LIBRARIES})
+target_link_libraries (KscIchol_Test     ${leuven_LIBRARIES})
 
 
 #-------------------------------------------------------------------------------

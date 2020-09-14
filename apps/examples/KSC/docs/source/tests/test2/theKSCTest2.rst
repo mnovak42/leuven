@@ -82,7 +82,7 @@ Note, that one could easily visualise the data (or the 20 000 sub-samples for
 training) in order to gain insights into it. However, the process shown here 
 is kept to be such that it might be applicable in general.
 
-The first and very important step (as discussed in :numref:`sec_icd`) is to find 
+The first and very important step (as discussed in :ref:`sec_icd` Section) is to find 
 suitable parameter values applied for the incomplete Cholesky approximation (IDC) of 
 the training data kernel matrix. One can utilise the :math:`\texttt{KscIchol}\_\texttt{Train}` 
 KSC application provided for training (i.e. relying solely on the training 
@@ -131,10 +131,10 @@ initial parameters for the ICD part as ::
 gives the above results. As it can be seen, the ICD of the training data kernel  
 kernel matrix yields an approximation with a (low) rank of 110 while the 
 corresponding error is less than 0.85. These indicate, that the selected kernel 
-parameters are within the limiting cases mentioned in :numref:`sec_icd` that 
+parameters are within the range of the limits mentioned in the :ref:`sec_icd` Section. This 
 can also be confirmed by having a look into the generated :math:`\texttt{out/PermutationVector.dat}`
-file that contains the indices of the (feature map of the) training data that 
-were used during the ICD to build up the approximations (i.e. permutations): 
+file, that contains the indices of the (feature map of the) training data that 
+were used during the ICD to build up the approximation (i.e. permutations): 
 it shows that data are nicely selected covering the whole range of indices when 
 using the given kernel parameter values. 
 

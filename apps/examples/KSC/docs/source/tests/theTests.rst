@@ -1,3 +1,5 @@
+.. _ksc_test_and_application_sec_doc:
+
 Tests for the ICD-KSC applications
 ===================================
 

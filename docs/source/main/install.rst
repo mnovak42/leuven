@@ -17,7 +17,7 @@ Requirements
 
 Building the :math:`\texttt{leuven}` library requires:
 
- - :math:`\texttt{c/c++}` compiles are installed on the system (even a Fortran 
+ - a :math:`\texttt{c/c++}` compiler, with :math:`\texttt{c++11}` support, to be installed on the system (even a Fortran 
    compiler is needed when other than Intel MKL is used as CPU BLAS/LAPACK option)
  - :math:`\texttt{CMake}` is used for managing (option configuration, locate 
    dependencies etc.) the build process, so it needs to be installed on the system

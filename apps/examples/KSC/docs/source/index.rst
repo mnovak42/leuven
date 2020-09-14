@@ -8,6 +8,15 @@ on the :math:`leuven` library and framework at
 `its git repository <https://github.com/mnovak42/leuven>`_ or in 
 `its documentation <https://leuven.readthedocs.io/en/latest/>`_. 
 
+.. figure::   tests/test3/figs/fig_4Spirals.png
+   :scale:    30 %
+   :figclass: align-center
+
+   Illustration: clustering result obtained by using the  
+   **sparse Kernel Spectral Clustering Applications**. See more at the 
+   :ref:`Test1 <sec_test1>` Section. 
+
+
 
 .. toctree::
    :maxdepth: 2
