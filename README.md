@@ -12,7 +12,7 @@ Framework, toolkit and **ready-to-use applications** for numerical linear algebr
 
 List of applications: 
 
- - **sparse Kernel Spectral Clustering (KSC)** algorithm, for large scale data analysis, **formulated as Weighted Kernel PCA witihin the LS-SVM framework**. The sparsity is achived through the **incomplete Cholesky factorisation** based approximation **of the kernel matrix**. See more on the theoretical backround in the [corresponding technical report](https://www.esat.kuleuven.be/stadius/ADB/novak/kscicd_internal.pdf) or on the application itself in [the dedicatet KSC application documentation and user guide](https://leuven-ksc.readthedocs.io/en/latest/).
+ - fast, **sparse Kernel Spectral Clustering (KSC)** algorithm, for large scale data analysis, **formulated as Weighted Kernel PCA witihin the LS-SVM framework**. The sparsity is achived by the combination of the **incomplete Cholesky factorisation** based low rank approximation **of the kernel matrix** with the so called **reduced set method**. See more on the theoretical backround in the [corresponding technical report](https://www.esat.kuleuven.be/stadius/ADB/novak/kscicd_internal.pdf) or on the application itself in [the dedicatet KSC application documentation and user guide](https://leuven-ksc.readthedocs.io/en/latest/).
 
 
 ## Short description
