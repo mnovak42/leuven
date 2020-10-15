@@ -8,7 +8,7 @@
 
 # The `leuven` library and framework
 
-Framework, toolkit and ready-to-use applications for numerical linear algebra dependent machine learning algorithms. 
+Framework, toolkit and **ready-to-use applications** for numerical linear algebra dependent machine learning algorithms. 
 
 
 ## Short description
