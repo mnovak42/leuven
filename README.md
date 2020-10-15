@@ -10,6 +10,10 @@
 
 Framework, toolkit and **ready-to-use applications** for numerical linear algebra dependent machine learning algorithms. 
 
+List of applications: 
+
+ - **sparse Kernel Spectral Clustering (KSC)** algorithm, for large scale data analysis, **formulated as Weighted Kernel PCA witihin the LS-SVM framework**. The sparsity is achived through the **incomplete Cholesky factorisation** based approximation **of the kernel matrix**. 
+
 
 ## Short description
 
