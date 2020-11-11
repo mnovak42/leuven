@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
     struct timeval start;   // initial time stamp - for timing
     struct timeval finish;  // final time stamp   - for timing
     BLAS           theBlas; // only for Matrix memory managmenet here in main
+    const bool     theUseGPU    = theInParams.fUseGPU;            // use GPU in training ?
     const size_t   theNumTrData = theInParams.fTheTrDataNumber;   // #training data
     const size_t   theDimTrData = theInParams.fTheTrDataDimension;// its dimension
   // ===========================================================================
@@ -180,6 +181,8 @@ int main(int argc, char **argv) {
     // the cardinality threshold below which clusters are considered to be
     // outliers and contibute with zero to the clustering quality measure
     theKscWkpcaIchol.SetQualityMeasureOutlierThreshold(theInParams.fTheClusterEvalOutlierThreshold);
+    // set request to use GPU during the training phase
+    theKscWkpcaIchol.SetUseGPU(theUseGPU);
     if (theInParams.fTheVerbosityLevel > 0) {
       std::cout << "\n ---- Starts: training the KSC model." << std::endl;
     }
