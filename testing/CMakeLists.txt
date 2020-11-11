@@ -49,7 +49,7 @@ endforeach ()
 if (USE_CUBLAS)
 
   file (GLOB headers ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/*.h)
-  add_executable (test_xgeqrf_v2 ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/test_xgeqrf_v2.cc ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/cuKers.cu ${headers}$)
+  add_executable (test_xgeqrf_v2 ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/test_xgeqrf_v2.cc ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/cuKers.cu ${headers})
   add_test       (xgeqrf_v2  test_xgeqrf_v2)
   # 
   target_include_directories (test_xgeqrf_v2 PUBLIC "${leuven_INCLUDE_DIR}")
@@ -62,7 +62,7 @@ if (USE_CUBLAS)
 
 
   file (GLOB headers ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/*.h)
-  add_executable (test_xorgqr_gpu ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/test_xorgqr.cc ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/cuKers.cu ${headers}$)
+  add_executable (test_xorgqr_gpu ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/test_xorgqr.cc ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/cuKers.cu ${headers})
   add_test       (xorgqr_gpu  test_xorgqr_gpu)
   # 
   target_include_directories (test_xorgqr_gpu PUBLIC "${leuven_INCLUDE_DIR}")
