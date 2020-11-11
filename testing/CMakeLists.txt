@@ -24,7 +24,7 @@ get_property(leuven_INCLUDE_DIR      GLOBAL PROPERTY leuven_INCLUDE_DIR_PROP)
 ## Add some unit tests for CPU/CUDA BLAS/LAPACK interface testing 
 ## ----------------------------------------------------------------------------
   
-set (UNIT_TESTS "xgemm" "xgeqrf" "xgesvd" "xsyevr" "xsysv")
+set (UNIT_TESTS "xgemm" "xgeqrf" "xgesvd" "xorgqr" "xsyevr" "xsysv" )
 
 if (USE_CUBLAS)
   enable_language(CUDA)
@@ -47,14 +47,31 @@ endforeach ()
 
 
 if (USE_CUBLAS)
-  add_executable (test_xgeqrf_v2 ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/test_xgeqrf_v2.cu)
-  add_test       (xgeqrf_v2  test_xgeqrf_v2 )
+
+  file (GLOB headers ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/*.h)
+  add_executable (test_xgeqrf_v2 ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/test_xgeqrf_v2.cc ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xgeqrf/cuKers.cu ${headers}$)
+  add_test       (xgeqrf_v2  test_xgeqrf_v2)
   # 
   target_include_directories (test_xgeqrf_v2 PUBLIC "${leuven_INCLUDE_DIR}")
-  if (USE_CUBLAS)
+#  if (USE_CUBLAS)
     target_link_libraries (test_xgeqrf_v2 ${PROJECTNAME} ${CUDA_LIBRARIES})
     target_compile_options (test_xgeqrf_v2 PUBLIC "-DON_GPU=ON")
     
     set_property(TARGET test_xgeqrf_v2 PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-  endif ()
+#  endif ()
+
+
+  file (GLOB headers ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/*.h)
+  add_executable (test_xorgqr_gpu ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/test_xorgqr.cc ${CMAKE_SOURCE_DIR}/apps/tests/BlasLapack/xorgqr/cuKers.cu ${headers}$)
+  add_test       (xorgqr_gpu  test_xorgqr_gpu)
+  # 
+  target_include_directories (test_xorgqr_gpu PUBLIC "${leuven_INCLUDE_DIR}")
+  #  if (USE_CUBLAS)
+    target_link_libraries (test_xorgqr_gpu ${PROJECTNAME} ${CUDA_LIBRARIES})
+    target_compile_options (test_xorgqr_gpu PUBLIC "-DON_GPU=ON")
+    
+    set_property(TARGET test_xorgqr_gpu PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+  #  endif ()
+
+
 endif ()
