@@ -9,7 +9,9 @@
 #include "types.hh"
 #include "Matrix.hh"
 
-#include "cuKers.h"
+#if USE_CUBLAS && ON_GPU
+  #include "cuKers.h"
+#endif
 
 #define min(x,y) (((x) < (y)) ? (x) : (y))
 
