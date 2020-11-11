@@ -30,6 +30,14 @@
 // Multiply (GEMM) operations with lots of flexibility. 
 
 
+// kernel for getting upper triangular of a matrix
+__global__
+void GetUpperTriangular2D(double* a_d, double* b_d, int m, int n);
+__global__
+void GetUpperTriangular2D(float* a_d, float* b_d, int m, int n);
+
+
+
 class CUBLAS {
 public:
   CUBLAS();
@@ -50,8 +58,27 @@ public:
   void CopyToGPU(Matrix<T>& m_h, Matrix<T>& m_d);
   template < class T >
   void CopyFromGPU(Matrix<T>& m_d, Matrix<T>& m_h);
+  template < class T >
+  void CopyOnGPU(T* from_d, T* to_h, size_t size);
 
   void SetNumThreads(int/*nthreads*/) { /* not MT */}
+
+
+/*
+  // a is an M-by-N matrix with M>=N 
+  // b is an N-by-N matrix 
+  // will write the upper triangular of a into the upper triangualr of b
+  template < class T >
+  __global__
+  void GetUpperTriangular2D(T* a_d, T* b_d, int m, int n);
+*/
+  // A_d is supposed to be an MxN matrix with M>=N
+  // B_d is supposed to be an NxN i.e. N=min(M,N)
+  // This fuction takes the upper triangular part of A and copies to the upper 
+  // triangular of B. Lower triangular of B is untouched.
+  template <class T>
+  void GetUpperTriangular(Matrix<T>& A_d, Matrix<T>& B_d);
+
 
   //
   // BLAS Level 3
@@ -150,7 +177,23 @@ public:
                           cublasOperation_t trans, int m, int n, int k, 
                           const T* A_d, int ldA, const T* TAU_d, T* C_d,
                           int ldC, T* work_d, int lwork, int* info_d);
-                                        
+
+
+  // https://docs.nvidia.com/cuda/cusolver/index.html#cuSolverDN-lt-t-gt-orgqr
+  template < class T >
+  void    XORGQR(Matrix<T>& A_d, Matrix<T>& TAU_d);
+  template < class T >
+  int     XORGQRBufferSize(cusolverDnHandle_t handle, int m, int n, int k, 
+                           const T* A_d, int ldA, const T* TAU_d);
+  template < class T > 
+  cusolverStatus_t xorgqr(cusolverDnHandle_t handle, int m, int n, int k, 
+                          T* A_d, int ldA, const T* TAU_d, 
+                          T* work_d, int lwork, int* info_d);
+  
+  
+  
+  
+  
   // There is no way to get the Lapack ?sysv to solve system of equations with 
   // symmetric coefficient matrix: cusolverDn?sytrf is available for the Bunch-
   // Kaufman factorization of a symmetric indefinite matrix that corresponds 

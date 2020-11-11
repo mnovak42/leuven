@@ -56,12 +56,13 @@ file (GLOB headers ${PROJECT_SOURCE_DIR}/*.h)
 #-------------------------------------------------------------------------------
 # Add the executable, and link it to the ${LIBNAME} libraries
 #
-add_executable (test_xgeqrf  test_xgeqrf.cc  ${headers})
-target_link_libraries (test_xgeqrf  ${${LIBNAME}_LIBRARIES})
 if (USE_CUBLAS AND ON_GPU)
-  add_executable (test_xgeqrf_v2 test_xgeqrf_v2.cc cuKers.cu ${headers})
-  set_property(TARGET test_xgeqrf_v2 PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-  target_link_libraries (test_xgeqrf_v2 ${${LIBNAME}_LIBRARIES})
+    add_executable (test_xorgqr test_xorgqr.cc cuKers.cu ${headers})
+    set_property(TARGET test_xorgqr PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+    target_link_libraries (test_xorgqr ${${LIBNAME}_LIBRARIES})
+else ()
+  add_executable (test_xorgqr  test_xorgqr.cc  ${headers})
+  target_link_libraries (test_xorgqr  ${${LIBNAME}_LIBRARIES})
 endif (USE_CUBLAS AND ON_GPU)
 
 
@@ -69,8 +70,5 @@ endif (USE_CUBLAS AND ON_GPU)
 # In case of fortran compiler i.e. when FBLAS wrapper was used to build the lib.
 #
 if (FORTRAN_COMPILER_REQUIRED)
-  set_property(TARGET test_xgeqrf PROPERTY LINKER_LANGUAGE Fortran)
-  if (USE_CUBLAS AND ON_GPU)
-    set_property(TARGET test_xgeqrf_v2 PROPERTY LINKER_LANGUAGE Fortran)
-  endif (USE_CUBLAS AND ON_GPU)
+  set_property(TARGET test_xorgqr PROPERTY LINKER_LANGUAGE Fortran)
 endif (FORTRAN_COMPILER_REQUIRED)

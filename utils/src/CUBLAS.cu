@@ -1,6 +1,8 @@
 
 #include "CUBLAS.hh"
 
+#include <cuda_runtime.h>
+#include <cmath>
 
 CUBLAS::CUBLAS() { /* nothing to do */ }
 
@@ -162,6 +164,49 @@ CUBLAS::xormqr(cusolverDnHandle_t handle, cublasSideMode_t side,
 
 
 //
+// ====  ?ORGQR ==
+//
+// template specialisation for double and float
+
+template < >
+int CUBLAS::XORGQRBufferSize(cusolverDnHandle_t handle, int m, int n, int k, 
+                            const double* A_d, int ldA, const double* TAU_d) {
+  int lwork = 0;
+  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
+  cusolver_status = cusolverDnDorgqr_bufferSize(handle, m, n, k, A_d, ldA, TAU_d, &lwork);
+  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::ORGQRBufferSize double \n");
+  return lwork;  
+}
+template < >
+int CUBLAS::XORGQRBufferSize(cusolverDnHandle_t handle, int m, int n, int k, 
+                            const float* A_d, int ldA, const float* TAU_d) {
+  int lwork = 0;
+  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
+  cusolver_status = cusolverDnSorgqr_bufferSize(handle, m, n, k, A_d, ldA, TAU_d, &lwork);
+  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::ORGQRBufferSize float \n");
+  return lwork;  
+}
+
+template < > 
+cusolverStatus_t 
+CUBLAS::xorgqr(cusolverDnHandle_t handle, int m, int n, int k, double* A_d, 
+               int ldA, const double* TAU_d, double* work_d, int lwork, int* info_d) {
+  //
+  // Form Q (A)
+  return cusolverDnDorgqr(handle, m, n, k, A_d, ldA, TAU_d, work_d, lwork, info_d);
+}
+template < > 
+cusolverStatus_t 
+CUBLAS::xorgqr(cusolverDnHandle_t handle, int m, int n, int k, float* A_d, 
+               int ldA, const float* TAU_d, float* work_d, int lwork, int* info_d) {
+  //
+  // Form Q (A)
+  return cusolverDnSorgqr(handle, m, n, k, A_d, ldA, TAU_d, work_d, lwork, info_d);
+}
+
+
+
+//
 // ====  ?GETRF ==
 //
 // template specialisation for double and float
@@ -275,4 +320,61 @@ CUBLAS::xsyevdx(cusolverDnHandle_t handle, cusolverEigMode_t jobz, cusolverEigRa
   return cusolverDnSsyevdx(handle, jobz, range, uplo, n, A_d, ldA, vL, vU, iL, iU, 
                            m, W_d, work_d, lwork, info_d);
 }
+
+
+
+__global__
+void GetUpperTriangular2D(double* a_d, double* b_d, int m, int n) {
+  int theMin = n;
+  int ir= blockIdx.x * blockDim.x + threadIdx.x;
+  int ic= blockIdx.y * blockDim.y + threadIdx.y;
+  if (ic<theMin && ir<=ic) {
+//     printf("%d\%d%\t%lg\n",ir,ic,a[ic*m+ir]);
+    b_d[ic*theMin+ir] = a_d[ic*m+ir]; 
+   }
+}
+
+
+__global__
+void GetUpperTriangular2D(float* a_d, float* b_d, int m, int n) {
+  int theMin = n;
+  int ir= blockIdx.x * blockDim.x + threadIdx.x;
+  int ic= blockIdx.y * blockDim.y + threadIdx.y;
+  if (ic<theMin && ir<=ic) {
+//     printf("%d\%d%\t%lg\n",ir,ic,a[ic*m+ir]);
+    b_d[ic*theMin+ir] = a_d[ic*m+ir]; 
+   }
+}
+
+
+
+template < >
+void CUBLAS::GetUpperTriangular(Matrix<double>& A_d, Matrix<double>& B_d) {
+  int M = A_d.GetNumRows();
+  int N = A_d.GetNumCols();
+  assert (M>=N &&  B_d.GetNumRows()==B_d.GetNumCols() &&  B_d.GetNumCols()==N && "\n CUBLAS::GetUpperTriangular: A should be MxN with M>=N  and B should be NxN \n");  
+  dim3 numThreads(32,32,1);
+  dim3 numBlocks( std::ceil( float(N)/numThreads.x ),  // row
+                  std::ceil( float(N)/numThreads.y ),  // col
+                  1
+                 );
+  GetUpperTriangular2D<<< numBlocks, numThreads >>> (A_d.GetDataPtr(), B_d.GetDataPtr(), M, N);  
+  cudaDeviceSynchronize();  
+}
+
+
+template < >
+void CUBLAS::GetUpperTriangular(Matrix<float>& A_d, Matrix<float>& B_d) {
+  int M = A_d.GetNumRows();
+  int N = A_d.GetNumCols();
+  assert (M>=N &&  B_d.GetNumRows()==B_d.GetNumCols() &&  B_d.GetNumCols()==N && "\n CUBLAS::GetUpperTriangular: A should be MxN with M>=N  and B should be NxN \n");  
+  dim3 numThreads(32,32,1);
+  dim3 numBlocks( std::ceil( float(N)/numThreads.x ),  // row
+                  std::ceil( float(N)/numThreads.y ),  // col
+                  1
+                 );
+  GetUpperTriangular2D<<< numBlocks, numThreads >>> (A_d.GetDataPtr(), B_d.GetDataPtr(), M, N);  
+  cudaDeviceSynchronize();  
+}
+
 

@@ -120,4 +120,3 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
           cmake --build build
           cd build && ctest -j2 --verbose --output-on-failure
-

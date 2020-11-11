@@ -9,7 +9,7 @@ FBLAS::FBLAS(int verbose) : kMKLAlignment(64) { SetNumThreads(1, verbose); }
 
 void FBLAS::SetNumThreads(int nthreads, int verbose) {
 #if USE_MKL_BLAS
-  mkl_set_num_threads(nthreads);
+  mkl_set_num_threads_local(nthreads);
   if (verbose>1)
     printf ("   ---> Using Intel(R) MKL BLAS on %i threads.\n",  mkl_get_max_threads());
 #elif USE_OPEN_BLAS

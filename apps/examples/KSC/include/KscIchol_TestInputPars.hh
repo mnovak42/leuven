@@ -20,35 +20,36 @@ public:
 
 public:
   //
-  cxxopts::Options*  fOptions;
+  cxxopts::Options*      fOptions;
   //
   // --- incomplete Cholesky (required)
-  DTYPE         fTheIcholTolError;
-  size_t        fTheIcholMaxRank;
+  DTYPE                  fTheIcholTolError;
+  size_t                 fTheIcholMaxRank;
   std::vector<INP_DTYPE> fTheIcholRBFKernelPar;
   // --- incomplete Cholesky (optional)
-  std::string   fTheIcholRedSetFile;
-  std::string   fTheIcholPermVectFile;
+  std::string            fTheIcholRedSetFile;
+  std::string            fTheIcholPermVectFile;
 
   // --- training data set input
-  size_t        fTheTrDataNumber;
-  size_t        fTheTrDataDimension;
-  std::string   fTheTrDataFile;
+  size_t                 fTheTrDataNumber;
+  size_t                 fTheTrDataDimension;
+  std::string            fTheTrDataFile;
   // --- test data set input
-  size_t        fTheTestDataNumber;
-  std::string   fTheTestDataFile;
+  size_t                 fTheTestDataNumber;
+  std::string            fTheTestDataFile;
   // --- clustering (required)
-  size_t        fTheClusterNumber;
-  INP_DTYPE     fTheClusterRBFKernelPar;
+  size_t                 fTheClusterNumber;
+  INP_DTYPE              fTheClusterRBFKernelPar;
   // --- clustering (optional)
-  int           fTheClusterEncodingScheme;
-  size_t        fTheClusterEvalOutlierThreshold;
-  DTYPE         fTheClusterEvalWBalance;
-  size_t        fTheClusterLevel;
-  std::string   fTheClusterResFile;
+  int                    fTheClusterEncodingScheme;
+  size_t                 fTheClusterEvalOutlierThreshold;
+  DTYPE                  fTheClusterEvalWBalance;
+  size_t                 fTheClusterLevel;
+  std::string            fTheClusterResFile;
   //
-  size_t        fTheVerbosityLevel;
-  size_t        fTheNumBLASThreads;
+  size_t                 fTheVerbosityLevel;
+  size_t                 fTheNumBLASThreads;
+  bool                   fUseGPU;
 
   friend std::ostream& operator<<(std::ostream& os, const KscIchol_TestInputPars& p) {
      os << "\n ===============================================================\n"
@@ -96,6 +97,7 @@ public:
         << "  ------ Other, optional parameters: \n"
         << "  verbosityLevel(2)          = " << p.fTheVerbosityLevel       << "\n"
         << "  numBLASThreads(4)          = " << p.fTheNumBLASThreads       << "\n"
+        << "  useGPU                     = " << p.fUseGPU                  << "\n"
         << "\n ===============================================================\n";
     return os;
   }
@@ -154,6 +156,7 @@ public:
     fOptions->add_options("Others [OPTIONAL]")
      ("verbosityLevel", "(size_t) Verbosity level.",                              cxxopts::value<size_t>()->default_value("2"))
      ("numBLASThreads", "(size_t) Number of threads to be used in BLAS/LAPACK.",  cxxopts::value<size_t>()->default_value("4"))
+     ("useGPU"        , "(bool)   Use GPU in the training (only if `leuven` was built with -DUSE_CUBLAS).")
      ("h,help"        , "(flag)   Print usage and available parameters")
     ;
   //  std::cerr<< fOptions->help({"", "Cholesky decomposition [REQUIRED]", "Training data set [REQUIRED]"}) << std::endl;
@@ -262,6 +265,7 @@ public:
       // --- Other, optionals (i.e. with default):
       fTheVerbosityLevel = result["verbosityLevel"].as<size_t>();
       fTheNumBLASThreads = result["numBLASThreads"].as<size_t>();
+      fUseGPU            = result.count("useGPU")>0 ? true : false;
 
     } catch (const cxxopts::OptionException& oe) {
         std::cerr << "\n*** Wrong input argument (see usage below): \n"

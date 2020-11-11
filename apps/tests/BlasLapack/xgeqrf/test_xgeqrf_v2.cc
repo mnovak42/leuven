@@ -3,13 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <cmath>
+
 #include "sys/time.h"
 #include "time.h"
 
 #include "types.hh"
 #include "Matrix.hh"
 
-#include <cuda_runtime.h> //only for cuda_status
+#include "cuKers.h"
+
 
 //
 // IT'S A GPU ONLY A=QR factorization AND QR multiplication
@@ -40,21 +43,6 @@ typedef double DTYPE;
 //typedef float DTYPE;
 
 
-
-// a is an M-by-N matrix with M>=N 
-// b is an N-by-N matrix 
-// will write the upper triangular of a into the upper triangualr of b
-template <class T>
-__global__
-void GetUpperTriangular_2D(T* a, T* b, int m, int n) {
-   int ir= blockIdx.x * blockDim.x + threadIdx.x;
-   int ic= blockIdx.y * blockDim.y + threadIdx.y;
-   if (ir<m && ic<n && ic>=ir) {
-//     printf("%d\%d%\t%lg\n",ir,ic,a[ic*m+ir]);
-     int idx = ic*m + ir;
-     b[ic*m+ir] = a[ic*m+ir]; 
-   }
-}
 
 
 
@@ -188,17 +176,10 @@ void GetUpperTriangular_2D(T* a, T* b, int m, int n) {
    theBlas_gpu.XGEQRF(A_d, TAU_d);
    // 2.
    printf("\n ---- Forming the R matrix (M-by-N) but only upper triangular on GPU");
-   dim3 numThreads(32,32,1);
-   dim3 numBlocks( std::ceil( float(N)/numThreads.x ),  // row
-                   std::ceil( float(N)/numThreads.y ),  // col
-                   1
-                  );
-   GetUpperTriangular_2D<<< numBlocks, numThreads >>>(  A_d.GetDataPtr(), GetBackA_d.GetDataPtr(), M, N);  
-   // Synchronize
-   cudaDeviceSynchronize();
-//   cuda_status = cudaDeviceSynchronize();
-//   assert(cuda_status == cudaSuccess && "\n GetUpperTriangular_2D is NOT SUCCESS \n");
-   
+
+   // launch kernel   
+   GetUpperTriangular(A_d.GetDataPtr(), GetBackA_d.GetDataPtr(), M, N);
+     
    // 3.
    printf("\n ---- XORMQR (LAPACK-?ORMQR: C = QC starts on GPU");
    theBlas_gpu.XORMQR(GetBackA_d, A_d, TAU_d);     

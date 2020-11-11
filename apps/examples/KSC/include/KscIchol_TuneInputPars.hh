@@ -20,31 +20,32 @@ public:
 
 public:
   //
-  cxxopts::Options*  fOptions;
+  cxxopts::Options*      fOptions;
   //
   // --- incomplete Cholesky
-  DTYPE         fTheIcholTolError;
-  size_t        fTheIcholMaxRank;
+  DTYPE                  fTheIcholTolError;
+  size_t                 fTheIcholMaxRank;
   std::vector<INP_DTYPE> fTheIcholRBFKernelPar;
   // --- training data set input
-  size_t        fTheTrDataNumber;
-  size_t        fTheTrDataDimension;
-  std::string   fTheTrDataFile;
+  size_t                 fTheTrDataNumber;
+  size_t                 fTheTrDataDimension;
+  std::string            fTheTrDataFile;
   // --- validation data set input
-  size_t        fTheValDataNumber;
-  std::string   fTheValDataFile;
+  size_t                 fTheValDataNumber;
+  std::string            fTheValDataFile;
   // --- clustering (optional)
-  int           fTheClusterEncodingScheme;
-  size_t        fTheClusterEvalOutlierThreshold;
-  DTYPE         fTheClusterEvalWBalance;
+  int                    fTheClusterEncodingScheme;
+  size_t                 fTheClusterEvalOutlierThreshold;
+  DTYPE                  fTheClusterEvalWBalance;
   // --- tuning: cluster number and kernle parametrs
-  size_t        fTheMinClusterNumber;
-  size_t        fTheMaxClusterNumber;
+  size_t                 fTheMinClusterNumber;
+  size_t                 fTheMaxClusterNumber;
   std::vector<INP_DTYPE> fTheKernelParameters;
   //
-  size_t        fTheVerbosityLevel;
-  size_t        fTheNumBLASThreads;
-  std::string   fTheResFile;
+  size_t                 fTheVerbosityLevel;
+  size_t                 fTheNumBLASThreads;
+  std::string            fTheResFile;
+  bool                   fUseGPU;
 
   friend std::ostream& operator<<(std::ostream& os, const KscIchol_TuneInputPars& p) {
      os << "\n ===============================================================\n"
@@ -98,6 +99,7 @@ public:
         << "  verbosityLevel(2)          = " << p.fTheVerbosityLevel       << "\n"
         << "  numBLASThreads(4)          = " << p.fTheNumBLASThreads       << "\n"
         << "  resFile(TuningRes)         = " << p.fTheResFile              << "\n"
+        << "  useGPU                     = " << p.fUseGPU                  << "\n"
         << "\n ===============================================================\n";
     return os;
   }
@@ -155,6 +157,7 @@ public:
      ("verbosityLevel"  , "(size_t) Verbosity level.",                              cxxopts::value<size_t>()->default_value("2"))
      ("numBLASThreads"  , "(size_t) Number of threads to be used in BLAS/LAPACK.",  cxxopts::value<size_t>()->default_value("4"))
      ("resFile"         , "(string) The result of tuning the KSC model is written into this file.",  cxxopts::value<std::string>()->default_value("TuningRes.dat"))
+     ("useGPU"        , "(bool)   Use GPU in the training (only if `leuven` was built with -DUSE_CUBLAS).")
      ("h,help"          , "(flag)   Print usage and available parameters")
     ;
   }
@@ -261,9 +264,10 @@ public:
       // --- Other, optionals (i.e. with default):
       fTheVerbosityLevel = result["verbosityLevel"].as<size_t>();
       fTheNumBLASThreads = result["numBLASThreads"].as<size_t>();
-      fTheResFile        = result["resFile"].as<std::string>();
+      fTheResFile        = result["resFile"].as<std::string>();      
       // remove extension from fTheResFile
       fTheResFile = fTheResFile.substr(0, fTheResFile.find_last_of("."));
+      fUseGPU     = result.count("useGPU")>0 ? true : false;
 
     } catch (const cxxopts::OptionException& oe) {
         std::cerr << "\n*** Wrong input argument (see usage below): \n"
