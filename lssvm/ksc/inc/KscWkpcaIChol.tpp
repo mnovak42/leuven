@@ -388,6 +388,10 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
       theBlas_gpu.Free(theSigmaVect_d);
       theBlas_gpu.Free(theUM_d);
       theBlas_gpu.Free(theAprxEigenvectM_d);
+      // also free the input Cholesky matrix (has been destroyed) and reset pointer
+      theBlas.Free(*fIncCholeskyM);
+      delete fIncCholeskyM;
+      fIncCholeskyM = nullptr;
   } else {    
 #endif  // USE_CUBLAS
   // not USE_CUBLAS: keep computaing the QR, SVD and QU on the CPU 
