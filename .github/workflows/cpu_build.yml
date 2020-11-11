@@ -35,8 +35,8 @@ jobs:
           ubuntu-18.04-gcc-7,
           macOS-10.15-gcc-9,
           macOS-10.15-gcc-8,
-          macOS-10.15-xcode-11.6,
-          macOS-10.15-xcode-11.1,
+          macOS-10.15-xcode-11.7,
+          macOS-10.15-xcode-12.1,
         ]
         # populate the .os matrix  
         include:
@@ -68,15 +68,15 @@ jobs:
             version: "8"
 
             ## MacOS + clang            
-          - name: macOS-10.15-xcode-11.6  
+          - name: macOS-10.15-xcode-11.7  
             os: macOS-10.15
             compiler: xcode
-            version: "11.6"
+            version: "11.7"
 
-          - name: macOS-10.15-xcode-11.1  
+          - name: macOS-10.15-xcode-12.1  
             os: macOS-10.15
             compiler: xcode
-            version: "11.1"
+            version: "12.1"
 
 
     steps:
@@ -120,4 +120,3 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=ON
           cmake --build build
           cd build && ctest -j2 --verbose --output-on-failure
-
