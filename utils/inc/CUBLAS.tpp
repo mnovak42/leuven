@@ -46,6 +46,13 @@ void CUBLAS::CopyFromGPU(Matrix<T>& m_d, Matrix<T>& m_h) {
   _unused(cudaError);
 }
 
+template<class T>
+void CUBLAS::CopyOnGPU(T* from_d, T* to_d, size_t size) {
+  cudaError_t cudaError;
+  cudaError = cudaMemcpy(to_d, from_d, size, cudaMemcpyDeviceToDevice);
+  assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );  
+  _unused(cudaError);
+}
 
 
 //
@@ -276,7 +283,7 @@ void CUBLAS::XORMQR(Matrix<T>& C_d,  Matrix<T>& A_d, Matrix<T>& TAU_d,
   cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS; 
   cusolver_status = cusolverDnCreate( &handle );
 //  printf("\n%s\n",cusolverGetErrorString(cusolver_status));
-  PrintCuSolverStatus(cusolver_status);
+//  PrintCuSolverStatus(cusolver_status);
   assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XORMQR-1 is NOT SUCCESS \n");
 
   //
@@ -303,6 +310,52 @@ void CUBLAS::XORMQR(Matrix<T>& C_d,  Matrix<T>& A_d, Matrix<T>& TAU_d,
   cuda_status = cudaDeviceSynchronize();
   assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XORMQR-4 is NOT SUCCESS \n");
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XORMQR-5 is NOT SUCCESS \n");
+  //
+  // free allocated memory
+  if (work_d)  cudaFree(work_d);
+  if (info_d)  cudaFree(info_d);
+}
+
+
+template < class T >
+void CUBLAS::XORGQR(Matrix<T>& A_d, Matrix<T>& TAU_d) {
+  // get dimensions of matrix A_d 
+  int M   = std::max(A_d.GetNumRows(), A_d.GetNumCols());
+  int N   = std::min(A_d.GetNumRows(), A_d.GetNumCols());
+  // number of elementary refractors stored in Q (and TAU) 
+  int K   = N;
+  // leading dimension of matrix A
+  int LDA = A_d.GetNumRows();
+  // Create a cusolverDnHandle_t handle (and check)
+  cusolverDnHandle_t handle;
+  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS; 
+  cusolver_status = cusolverDnCreate( &handle );
+//  printf("\n%s\n",cusolverGetErrorString(cusolver_status));
+//  PrintCuSolverStatus(cusolver_status);
+  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XORGQR-1 is NOT SUCCESS \n");
+
+  //
+  // Query work space (and check) ....D/S
+  int lwork = XORGQRBufferSize(handle, M, N, K, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr());
+  //
+  // Allocate workspace on DEVICE
+  T*  work_d = NULL;
+  cudaError_t cuda_status = cudaSuccess;
+  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
+  assert(cudaSuccess == cuda_status && "\n CUBLAS::XORGQR-2 is NOT SUCCESS \n");
+  //
+  // On DEVICE memory pointers
+  int*  info_d = NULL;
+  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
+  assert(cudaSuccess == cuda_status && "\n CUBLAS::XORGQR-3 is NOT SUCCESS \n");
+  //
+  // Call cuslover-Dense-orgQR and form the matrix Q from a previous A = QR, that results in the inout A and Tau
+  cusolver_status = xorgqr(handle, M, N, K, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr(),
+                           work_d, lwork, info_d);
+  // Synchronize
+  cuda_status = cudaDeviceSynchronize();
+  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XORGQR-4 is NOT SUCCESS \n");
+  assert(cuda_status == cudaSuccess && "\n CUBLAS::XORGQR-5 is NOT SUCCESS \n");
   //
   // free allocated memory
   if (work_d)  cudaFree(work_d);
