@@ -160,6 +160,7 @@ void CUBLAS::XGESVD(Matrix<T>& A_d,  Matrix<T>& SIGMA_d, const char* JOBU,
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESVD-6 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (rwork_d) cudaFree(rwork_d);                 
   if (info_d)  cudaFree(info_d);
@@ -214,6 +215,7 @@ void CUBLAS::XGESVD(Matrix<T>& A_d,  Matrix<T>& SIGMA_d) {
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESVD-6 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (rwork_d) cudaFree(rwork_d);                 
   if (info_d)  cudaFree(info_d);
@@ -257,6 +259,7 @@ void CUBLAS::XGEQRF(Matrix<T>& A_d,  Matrix<T>& TAU_d) {
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XGEQRF-5 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (info_d)  cudaFree(info_d);
 }
@@ -312,6 +315,7 @@ void CUBLAS::XORMQR(Matrix<T>& C_d,  Matrix<T>& A_d, Matrix<T>& TAU_d,
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XORMQR-5 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (info_d)  cudaFree(info_d);
 }
@@ -358,6 +362,7 @@ void CUBLAS::XORGQR(Matrix<T>& A_d, Matrix<T>& TAU_d) {
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XORGQR-5 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (info_d)  cudaFree(info_d);
 }
@@ -426,6 +431,7 @@ void CUBLAS::XGESV(Matrix<T>& A_d,  Matrix<T>& B_d, bool isTransA) {
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESV-7 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (info_d)  cudaFree(info_d);
   if (ipiv_d)  cudaFree(ipiv_d);
@@ -487,6 +493,7 @@ int CUBLAS::XSYEVDX(Matrix<T>& A_d,  Matrix<T>& EIGENVALS_d,
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XSYEVDX-5 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (info_d)  cudaFree(info_d);
   //
@@ -556,6 +563,7 @@ CUBLAS::XSYEVDX(Matrix<T>& A_d,  Matrix<T>& EIGENVALS_d, Matrix<T>& EIGENVECTS_d
   assert(cuda_status == cudaSuccess && "\n CUBLAS::XSYEVDX-5 is NOT SUCCESS \n");
   //
   // free allocated memory
+  cusolverDnDestroy (handle);
   if (work_d)  cudaFree(work_d);
   if (info_d)  cudaFree(info_d);
   //
