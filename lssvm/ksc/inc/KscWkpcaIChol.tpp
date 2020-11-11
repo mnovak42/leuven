@@ -312,8 +312,87 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   //      as in the additional theTauVect col vector (these will be used later)
   //   b. retrive the (RxR) upper triangular matrix of \tilde{D}^{-1/2}M_{\tilde{D}}G = QR 
   // a.: create the tau vector and allocate the memory
+  Matrix<T> theSigmaVect(theRankOfAprx, 1);
+  theBlas.Malloc(theSigmaVect);
+
+//
+// === ON DEVICE computation:
+//   Perform the QR decomposition of the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix,
+//   the SVD decompositon of the resulted R matrix, computation of the eigenvectors 
+//   of the symmetric problem (by left multiplying the left-singular vectors with Q).
+//   (Only is building with the USE_CUBLAS CMake option, i.e. with CUDA support, 
+//    and requested by setting the fUseGPU member.)
+  
+#if USE_CUBLAS
+  if ( fUseGPU ) {
+      BLAS_gpu  theBlas_gpu;
+      if (verbose>2) {
+        std::cout<< "             ...... QR starts... on GPU" << std::endl;
+      }
+      Matrix<T> theDMG_d(theNumTrData, theRankOfAprx);
+      Matrix<T> theTauVect_d(theRankOfAprx, 1);
+      theBlas_gpu.Malloc(theDMG_d);      // the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix to be QR-ed
+      theBlas_gpu.Malloc(theTauVect_d);  // tau-vector to store coefs of the refs.
+      // copy the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix
+      theBlas_gpu.CopyToGPU(*fIncCholeskyM, theDMG_d);
+      // call QR factorization
+      theBlas_gpu.XGEQRF(theDMG_d, theTauVect_d);
+      // b.: create matrix R, allocate memory and obtain as the upper-triangular of the QR decomposed theDMG_d
+      Matrix<T> theRM_d(theRankOfAprx, theRankOfAprx);
+      theBlas_gpu.Calloc(theRM_d);
+      theBlas_gpu.GetUpperTriangular(theDMG_d, theRM_d);// theNumTrData, theRankOfAprx
+      //
+      // 4. Perform SVD on the R matrix: on completion, R matrix will contain the 
+      //    left singular vectors (all i.e. as many as cols in R) and theSigmaVect 
+      //    will contain the corresponding singular values.
+      // create the sigma vector and allocate memory
+      if (verbose>2) {
+        std::cout<< "             ...... SVD starts... on GPU" << std::endl;        
+      }
+      Matrix<T> theSigmaVect_d(theRankOfAprx, 1);
+      theBlas_gpu.Malloc(theSigmaVect_d);
+      // call the SVD
+      theBlas_gpu.XGESVD(theRM_d, theSigmaVect_d);
+      //
+      // 5. Take the fNumberOfClusters-1 leading left singular vectors into the 
+      //    theAprxEigenvectM and multiply this matrix by Q (from left) to get the 
+      //    fNumberOfClusters-1 leading eigenvectors of the symmetrix problem. 
+      //    (This is why we make a larger, N_tr x fNumberOfClusters-1 matrix
+      //    instead of the required R x fNumberOfClusters-1).
+      // NOTE: with intel MKL, the result of ?ormqr depends on the number of columns 
+      //       in the matrix: when computed QA and QB such that the first n=cols of 
+      //       A and B are identical, the first n-cols of the resulted QA and QB are
+      //       not identical (small numerical differences). To avoid this, the 
+      //       matrix Q (theNumTrData, theRankOfAprx) is formed explicitely and QU 
+      //       is computed.
+      // form Q (in the Ichol matrix)
+      if (verbose>2) {
+        std::cout<< "             ...... computing QU starts ... GPU" << std::endl;            
+      }
+      theBlas_gpu.XORGQR(theDMG_d, theTauVect_d); 
+      // take the K-1 left singular vectors into U
+      Matrix<T>  theUM_d(theRankOfAprx, fNumberOfClusters-1);
+      theBlas_gpu.Malloc(theUM_d);
+      theBlas_gpu.CopyOnGPU(theRM_d.GetDataPtr(), theUM_d.GetDataPtr(), sizeof(T)*theRankOfAprx*(fNumberOfClusters-1));
+      // compute QU into theAprxEigenvectM (that's the matrix with the \beta eigenvects) 
+      Matrix<T>  theAprxEigenvectM_d(theAprxEigenvectM.GetNumRows(), theAprxEigenvectM.GetNumCols());
+      theBlas_gpu.Calloc(theAprxEigenvectM_d);
+      theBlas_gpu.XGEMM(theDMG_d, theUM_d, theAprxEigenvectM_d);
+      // copy results from device to host
+      theBlas_gpu.CopyFromGPU(theAprxEigenvectM_d, theAprxEigenvectM);
+      theBlas_gpu.CopyFromGPU(theSigmaVect_d, theSigmaVect);
+      // free all device side memory
+      theBlas_gpu.Free(theDMG_d);
+      theBlas_gpu.Free(theTauVect_d);
+      theBlas_gpu.Free(theRM_d);
+      theBlas_gpu.Free(theSigmaVect_d);
+      theBlas_gpu.Free(theUM_d);
+      theBlas_gpu.Free(theAprxEigenvectM_d);
+  } else {    
+#endif  // USE_CUBLAS
+  // not USE_CUBLAS: keep computaing the QR, SVD and QU on the CPU 
   if (verbose>2) {
-    std::cout<< "             ...... QR starts... " << std::endl;        
+    std::cout<< "             ...... QR starts... " << std::endl;
   }
   Matrix<T> theTauVect(theRankOfAprx, 1);    
   theBlas.Malloc(theTauVect);
@@ -335,8 +414,8 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   if (verbose>2) {
     std::cout<< "             ...... SVD starts... " << std::endl;        
   }
-  Matrix<T> theSigmaVect(theRankOfAprx, 1);
-  theBlas.Malloc(theSigmaVect);
+//  Matrix<T> theSigmaVect(theRankOfAprx, 1);
+//  theBlas.Malloc(theSigmaVect);
   // call the SVD
   theBlas.XGESVD(theRM, theSigmaVect);
   //
@@ -362,21 +441,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   std::memcpy(theUM.GetDataPtr(), theRM.GetDataPtr(), sizeof(T)*theRankOfAprx*(fNumberOfClusters-1));
   // compute QU into theAprxEigenvectM (that's the matrix with the \beta eigenvects) 
   theBlas.XGEMM(*fIncCholeskyM, theUM, theAprxEigenvectM);
-//  theAprxEigenvectM.WriteToFile("eigenM_after.dat", false, 15);
-
-/*
-std::cout<< "             ...... taking left singular vectors starts... " << std::endl;        
-  for (size_t ic=0; ic<fNumberOfClusters-1; ++ic) {
-    // I could try to use memcpy here !!
-    for (size_t ir=0; ir<theRankOfAprx; ++ir) {
-      theAprxEigenvectM.SetElem(ir, ic, theRM.GetElem(ir, ic));
-    }
-  }
-std::cout<< "             ...... computing QU starts ... " << std::endl;          
-  // QU -> \beta-s
-  theBlas.XORMQR(theAprxEigenvectM, *fIncCholeskyM, theTauVect);  
-*/
-  
+  //
   // theTauVect, theRM and fIncCholeskyM can be freed here  
   theBlas.Free(theTauVect);
   theBlas.Free(theRM);
@@ -384,6 +449,9 @@ std::cout<< "             ...... computing QU starts ... " << std::endl;
   theBlas.Free(*fIncCholeskyM);
   delete fIncCholeskyM;
   fIncCholeskyM = nullptr;
+#if USE_CUBLAS
+  }  
+#endif  // USE_CUBLAS
   //
   // 6. Compute the approximated eigenvectors of the original, non-symetric problem 
   //    by left multiplying theAprxEigenvectM (\beta-s) with \tilde{D}^-1/2 
@@ -418,8 +486,7 @@ std::cout<< "             ...... computing QU starts ... " << std::endl;
       fTheAprxBiasTermsM->SetElem ( ic, 0, dum0*(dum1*dum1-1.)*invNumTrData );
     }
   }
-  //std::cout << " theAprxBiasTermsM[0] = " << theAprxBiasTermsM.GetElem(0,0) << std::endl;
-  // clean the memory allocated for theSigmaVect and for the theAprxEigenvectM
+  // clean the memory allocated for theSigmaVect 
   theBlas.Free(theSigmaVect);  
 }
 
@@ -501,7 +568,7 @@ std::vector<std::thread> theThreads(kThreads);
   // loop over the given kernel parametres  
   for (size_t ikp=0; ikp<theKernelParametersVect.size(); ++ikp) {
     if (verbose > 1 ) {
-      std::cout<< "  === KscWkpcaIChol::Tune : tuning for the " << ikp << "-th kernel paraeters out of the " << theKernelParametersVect.size()-1<< std::endl;
+      std::cout<< "  === KscWkpcaIChol::Tune : tuning for the " << ikp << "-th kernel parameters out of the " << theKernelParametersVect.size()-1<< std::endl;
     }
     // 1. Make a copy of the Incomplete Cholesky Matrix: it will be destroyed and
     //    the corresponding memory will be freed when calculating the eigenvectors. 
@@ -731,7 +798,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Test(Matrix<TInputD, false>& theTestInputDat
   }
   // compute the approximated score variables of the TEST set 
   //  - theAprxScoreVariableM with (K-1)x(N_test)
-  Matrix<T> theAprxTestScoreVariableM(fNumberOfClusters, theNumTestData);
+  Matrix<T> theAprxTestScoreVariableM(fNumberOfClusters-1, theNumTestData);
   theBlas.Calloc(theAprxTestScoreVariableM); 
   theBlas.XGEMM(*fTheReducedSetCoefM, theReducedTestSetKernelM, theAprxTestScoreVariableM);
   // add the approximated bias terms (only if BLF or AMS)

@@ -30,6 +30,7 @@ public:
   
   /**Constructor */
   KscWkpcaIChol() {
+    fUseGPU                = false;
     // clreate the kernel functon object 
     fKernel                = new TKernel(); 
     // input data needs to be set by the user
@@ -118,6 +119,24 @@ public:
   size_t GetNumberOfClustersToFind() const     { return fNumberOfClusters; }
   
   
+  /**
+    * Request to use GPU in the computations of the approximated eigenvectors related 
+    * to the training.
+    *
+    * When building with the $\texttt{-DUSE_CBLAS}$, $\texttt{CMake}$ configuration
+    * option, i.e. with GPU (CUDA) support, the most compute-intensive part of the 
+    * training might be accelerated by using the GPU. This is the QR, SVD and 
+    * the QU computation of the approximated eigenvalues of the symmetric problem.
+    * These computations are performed on the GPU when this flag is turned to be 
+    * true. This can especially be usefull in case of large number of reduce set 
+    * sizes.
+    *
+    * @param val The value to request GPU based computation. If $\texttt{true}$, 
+    *  the QR, SVD decompositions as well as the QU computations are done on the 
+    *  GPU (in a row, without moving back to the host) instead of the CPU. All 
+    *  computations are done by using the CPU otherwise (default).
+    */
+    void  SetUseGPU(bool val) { fUseGPU = val; } 
   
   
   /**
@@ -344,6 +363,10 @@ private:
  * @name Data members
  */
 // @{  
+  /** Use GPU (if available and built with the -DUSE_CUBLAS CMake option) in the 
+    * approximated training set eigenvector computation.
+    */
+  bool                        fUseGPU;  
   /**Number of clusters to find. */
   size_t                      fNumberOfClusters;  
   /**Pointer to the kernel object that implements the kernel function. */  
