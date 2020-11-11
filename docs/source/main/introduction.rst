@@ -159,6 +159,10 @@ of using the NVIDIA CUDA implementations of these specifications
    These classes contain the implementation of the above mentioned auxiliary 
    methods for memory handling (and memory copies for GPU) as well.
 
+The ``CUDA support`` can be enabled at configuration time by using the 
+:math:`\texttt{-DUSE}\_\texttt{CUBLAS=ON}` :math:`\texttt{CMake}` configuration 
+option. 
+
 Example:
   To perform the :math:`C = AB` matrix multiplication (as a special case of the general 
   :math:`C = \alpha A^T B^T + \beta C` with the optional transposes) on the CPU (using 

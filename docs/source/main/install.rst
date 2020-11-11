@@ -889,13 +889,6 @@ example applications at ...
 CUDA support
 ~~~~~~~~~~~~~~~~~~
 
+See :ref:`leuven_CUDA_support` for the description of ``CUDA`` support in the 
+:math:`\texttt{leuven}` library.
 
-Beyond the CPU implementations of the BLAS/LAPACK specifications, GPU versions 
-are also available. The :math:`\texttt{leuven}` library provides the possibility 
-of using the CUDA implementations of these specifications by the help of   
-
- - the lightweight matirx
-
-The lightweight matrix can hold 
-
-This GPU BLAS oprioninterfaces 
