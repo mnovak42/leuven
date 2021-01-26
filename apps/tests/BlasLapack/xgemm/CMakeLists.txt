@@ -18,6 +18,7 @@ if (NOT ${LIBNAME}_FOUND)
   message (FATAL_ERROR "${LIBNAME} was not found")
 endif ()
 
+find_package (Threads REQUIRED)
 
 #-------------------------------------------------------------------------------
 # Set the CXX flags that were used when building the library

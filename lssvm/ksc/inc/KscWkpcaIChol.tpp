@@ -20,15 +20,15 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
   BLAS  theBlas;
   theBlas.SetNumThreads(numBLASThreads, verbose);
   const int kThreads = numBLASThreads;
-  // set dimensions: number, dimension of the training data and the rank of the 
+  // set dimensions: number, dimension of the training data and the rank of the
   //                 incomplete Cholesky approximation i.e. number of cols in G
   const size_t theNumTrData  = fInputTrainingDataM->GetNumRows(); // (N_tr); row major!
   const size_t theDimTrData  = fInputTrainingDataM->GetNumCols(); // each row is one data
   const size_t theRankOfAprx = fIncCholeskyM->GetNumCols(); // (R); rows should be = theNumTrData
   //
-  // ------------------------------------------------------------------------ // 
-  // 1. Compute the K-1 leading approximated eigenvectors of the D^{-1}M_D\Omega 
-  //    matrix and (only in case of BLF, AMS) the corresponding K-1 approximated 
+  // ------------------------------------------------------------------------ //
+  // 1. Compute the K-1 leading approximated eigenvectors of the D^{-1}M_D\Omega
+  //    matrix and (only in case of BLF, AMS) the corresponding K-1 approximated
   //    bias terms (the Cholesky matrix will be destroyed):
   //
   //  - the approximated bias terms: computed only in case of BFL and AMS:
@@ -37,25 +37,25 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
     theBlas.Free(*fTheAprxBiasTermsM);
     delete fTheAprxBiasTermsM;
     fTheAprxBiasTermsM = nullptr;
-  }   
+  }
   if (fEncodingAndQM->GetQualityMeasureType()!=KscQMType::kBAS) {
     fTheAprxBiasTermsM = new Matrix<T>(fNumberOfClusters-1, 1);
     theBlas.Malloc(*fTheAprxBiasTermsM);
-  } 
+  }
   // - the approximated eigenvectors
   Matrix<T> theAprxEigenvectM(theNumTrData, fNumberOfClusters-1);
-  theBlas.Calloc(theAprxEigenvectM); 
+  theBlas.Calloc(theAprxEigenvectM);
   // Note: the approximated bias terms will be compute if the fTheAprxBiasTermsM!=nulltr
   if (verbose>1) {
-    std::cout<< "          ====> Starts computing eigenvectors... " << std::endl;    
+    std::cout<< "          ====> Starts computing eigenvectors... " << std::endl;
   }
   ComputeApproximatedEigenvectors(theAprxEigenvectM, numBLASThreads, verbose);
   //
   // ------------------------------------------------------------------------ //
   // 2. Create the reduced set and compute the reduced set coefficient matrix
   //    2.1. Create the reduced set data matrix member
-  // NOTE: the first R (theRankOfAprx) points in the fInputTrainingDataM are 
-  //       assumed to be the reduced set points i.e. the permutations, corresponding 
+  // NOTE: the first R (theRankOfAprx) points in the fInputTrainingDataM are
+  //       assumed to be the reduced set points i.e. the permutations, corresponding
   //       to the incomplete Cholesky, should have already been done on this matrix.
   //    2.2. Calculate the reduced set coefficients:
   //      2.2 a. Form the within reduced set and reduced set training set kernel matrix
@@ -70,8 +70,8 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
   theBlas.Malloc(*fTheReducedSetDataM);
   //
   if (verbose>1) {
-    std::cout<< "          ====> Starts forming the Reduced-Reduced and Reduced-Test kernelmatrix... " << std::endl;      
-  }  
+    std::cout<< "          ====> Starts forming the Reduced-Reduced and Reduced-Test kernelmatrix... " << std::endl;
+  }
   Matrix<T> theReducedSetKernelM(theRankOfAprx, theRankOfAprx);
   Matrix<T> theReducedTrainingSetKernelM(theRankOfAprx, theNumTrData);
   theBlas.Malloc(theReducedSetKernelM);
@@ -80,7 +80,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
   // copy the reduced set kernel matrix part (first R cols that has R rows each)
   std::memcpy(theReducedSetKernelM.GetDataPtr(), theReducedTrainingSetKernelM.GetDataPtr(), sizeof(T)*theRankOfAprx*theRankOfAprx);
   // copy reduced set data
-  std::memcpy(fTheReducedSetDataM->GetDataPtr(), fInputTrainingDataM->GetDataPtr(), sizeof(TInputD)*fInputTrainingDataM->GetNumCols()*theRankOfAprx);  
+  std::memcpy(fTheReducedSetDataM->GetDataPtr(), fInputTrainingDataM->GetDataPtr(), sizeof(TInputD)*fInputTrainingDataM->GetNumCols()*theRankOfAprx);
   // 2.2 b. create reduced set coef. matrix and allocate memory
   if (fTheReducedSetCoefM) {
     theBlas.Free(*fTheReducedSetCoefM);
@@ -90,14 +90,14 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
   theBlas.Calloc(*fTheReducedSetCoefM);
   // its transpose is computed then it will be copied
   Matrix<T> theReducedSetCoefM (theRankOfAprx, fNumberOfClusters-1);
-  theBlas.Calloc(theReducedSetCoefM);  
+  theBlas.Calloc(theReducedSetCoefM);
   if (verbose>1) {
-    std::cout<< "          ====> Starts computing the reduced set coefs... " << std::endl;        
+    std::cout<< "          ====> Starts computing the reduced set coefs... " << std::endl;
   }
   // compute B = \Omega_{RxN_tr} \Beta_{N_trxK-1} + B
   theBlas.XGEMM(theReducedTrainingSetKernelM, theAprxEigenvectM, theReducedSetCoefM);
   // free theAprxEigenvectM
-  theBlas.Free(theAprxEigenvectM);  
+  theBlas.Free(theAprxEigenvectM);
   // solve \Omega_{RxR} X_{RxK-1} = B_{RxK-1}: X will be in B at the end
   theBlas.XSYSV(theReducedSetKernelM, theReducedSetCoefM);
   // take the trasnpose -> memory continous K-1 dimensional data
@@ -106,35 +106,35 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
       fTheReducedSetCoefM->SetElem(ic, ir, theReducedSetCoefM.GetElem(ir, ic));
     }
   }
-  // clean the memory allocated for theReducedSetKernelM and to the intermediate 
+  // clean the memory allocated for theReducedSetKernelM and to the intermediate
   // theReducedSetCoefM
-  theBlas.Free(theReducedSetKernelM);  
-  theBlas.Free(theReducedSetCoefM);  
+  theBlas.Free(theReducedSetKernelM);
+  theBlas.Free(theReducedSetCoefM);
   // theReducedTrainingSetKernelM will be used later...
   //
   // ------------------------------------------------------------------------ //
   // 3. Generate cluster membership encoding
-  //  3.1. In case of BFL and AMS: compute the approximated score matrix as 
-  //       theReducedSetCoefM_{#number_of_clusters-1,R}\Omega{RN_tr} plus the 
-  //       (K-1) approximated bias terms to each columns. The way this is 
+  //  3.1. In case of BFL and AMS: compute the approximated score matrix as
+  //       theReducedSetCoefM_{#number_of_clusters-1,R}\Omega{RN_tr} plus the
+  //       (K-1) approximated bias terms to each columns. The way this is
   //       computed is first wihout the bias term:
-  //        [theReducedSetCoefM_{R,#number_of_clusters-1}] \Omega{RN_tr} then 
-  //        each col. of the result is a K-1 dimensional score valiable minus 
+  //        [theReducedSetCoefM_{R,#number_of_clusters-1}] \Omega{RN_tr} then
+  //        each col. of the result is a K-1 dimensional score valiable minus
   //        the K-1 diemnsional bias term that will be added.
-  //  3.1. In case of BAS, the approximated score matrix is not needed because 
+  //  3.1. In case of BAS, the approximated score matrix is not needed because
   //       the code book is formed based on the reduced set coeffitients.
   //  3.2. The code book i.e. the cluster membership encoding is generated.
   if (verbose>1) {
-    std::cout<< "          ====> Starts generating encoding... " << std::endl;          
+    std::cout<< "          ====> Starts generating encoding... " << std::endl;
   }
   Matrix<T>* theAprxScoreVariableM = nullptr;
   if (fEncodingAndQM->GetQualityMeasureType()!=KscQMType::kBAS) {
-    // BLF OR AMS case: 
-    // 3.1. compute the approximated score variables minus the bias term 
+    // BLF OR AMS case:
+    // 3.1. compute the approximated score variables minus the bias term
     theAprxScoreVariableM = new Matrix<T>(fNumberOfClusters-1, theNumTrData);
     theBlas.Calloc(*theAprxScoreVariableM);
     theBlas.XGEMM(*fTheReducedSetCoefM, theReducedTrainingSetKernelM, *theAprxScoreVariableM);
-    // complete 3.1. i.e. add the approximated bias terms 
+    // complete 3.1. i.e. add the approximated bias terms
     for (size_t idat=0; idat<theNumTrData; ++idat) {
       for (size_t is=0; is<fNumberOfClusters-1; ++is) {
         theAprxScoreVariableM->SetElem(is, idat, theAprxScoreVariableM->GetElem(is, idat)+fTheAprxBiasTermsM->GetElem(is, 0));
@@ -144,24 +144,24 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
     fEncodingAndQM->GenerateCodeBook(*theAprxScoreVariableM, fNumberOfClusters);
   } else {
     // BAS
-    // 3.2. 
+    // 3.2.
     fEncodingAndQM->GenerateCodeBook(*fTheReducedSetCoefM, fNumberOfClusters);
-  }  
-  // 
+  }
+  //
   // ------------------------------------------------------------------------ //
   // 4. The training is done at this point. The last part, clustering the training
   //    data and computing the corresponding quality measure, is optional.
   //  4.1. Compute the approximated score variable matrix:
-  //        In case of BLF and AMS: it's already done because it's necessary to 
+  //        In case of BLF and AMS: it's already done because it's necessary to
   //                                for the encoding.
   //        in case of BAS: it's done here but the score variable minus bias term
-  //                        is computed 
+  //                        is computed
   //  4.2. Compute KSC model quality measure on the this training set data.
 
   //
   if (isQMOnTraining) {
-    // allocate the matrix to store the clustering results (number of cols depends 
-    // on the input arg ...)    
+    // allocate the matrix to store the clustering results (number of cols depends
+    // on the input arg ...)
     size_t ncl = qmFlag<2 ? qmFlag+1 : fNumberOfClusters+1;
     if (fTheClusterMembershipM) {
       theBlas.Free(*fTheClusterMembershipM);
@@ -174,8 +174,8 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
     if (fEncodingAndQM->GetQualityMeasureType()==KscQMType::kBLF) {
       // == BLF ===============================================================
       fEncodingAndQM->ClusterDataSet(*theAprxScoreVariableM, *fTheClusterMembershipM, qmFlag);
-      // 3.3. a. BLF: in case of BLF and K=2: compute the second variable vector 
-      //      as the col sums of the theReducedTrainingSetKernelM RxN_tr that 
+      // 3.3. a. BLF: in case of BLF and K=2: compute the second variable vector
+      //      as the col sums of the theReducedTrainingSetKernelM RxN_tr that
       //      gives the N_tr second variable by adding the single bias term.
       Matrix<T>* theSecondVarForBLFM = nullptr;
       if (fNumberOfClusters==2) {
@@ -200,7 +200,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
       theQMValue = fEncodingAndQM->ComputeQualityMeasure(*fTheClusterMembershipM);
     } else {
       // == BAS ===============================================================
-      // 3.1. compute the approximated score variables minus the bias term 
+      // 3.1. compute the approximated score variables minus the bias term
       theAprxScoreVariableM = new Matrix<T>(fNumberOfClusters-1, theNumTrData);
       theBlas.Calloc(*theAprxScoreVariableM);
       theBlas.XGEMM(*fTheReducedSetCoefM, theReducedTrainingSetKernelM, *theAprxScoreVariableM);
@@ -209,16 +209,16 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
       theQMValue = fEncodingAndQM->ComputeQualityMeasure(*fTheClusterMembershipM);
       // clean allocated memory
     }
-    _unused(theQMValue);  
-    // ====== Print out result ===== 
+    _unused(theQMValue);
+    // ====== Print out result =====
 //    std::cerr<< "  == The KSC model evaluation criterion: = " << fEncodingAndQM->GetName() << std::endl;
 //    std::cerr<< "  == QM-value = " << fEncodingAndQM->GetTheQualityMeasureValue() << std::endl;
 //    std::cerr<< "  == QM-etaBalance = " << fEncodingAndQM->GetCoefEtaBalance() << std::endl;
-    
+
 //    fTheClusterMembershipM->WriteToFile("CRes.dat");
-//    fInputTrainingDataM->WriteToFile("Data.dat");       
+//    fInputTrainingDataM->WriteToFile("Data.dat");
     //
-    // clean remaining allocated memory (keep only theAprxScoreVariableM if not 
+    // clean remaining allocated memory (keep only theAprxScoreVariableM if not
     // for tuning i.e. isQMOnTraining = true)
     if (theAprxScoreVariableM) {
       theBlas.Free(*theAprxScoreVariableM);
@@ -231,7 +231,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTrai
     }
     fTheAprxScoreVariableM = theAprxScoreVariableM;
   }
-  theBlas.Free(theReducedTrainingSetKernelM); 
+  theBlas.Free(theReducedTrainingSetKernelM);
   //
   //
 }
@@ -244,19 +244,19 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   BLAS  theBlas;
   theBlas.SetNumThreads(numBLASThreads, verbose);
 
-  // set dimensions: number, dimension of the training data and the rank of the 
+  // set dimensions: number, dimension of the training data and the rank of the
   //                 incomplete Cholesky approximation i.e. number of cols in G
   const size_t theNumTrData  = fInputTrainingDataM->GetNumRows(); // (N_tr); row major!
 //  const size_t theDimTrData  = fInputTrainingDataM->GetNumCols(); // each row is one data
   const size_t theRankOfAprx = fIncCholeskyM->GetNumCols(); // (R); rows should be = theNumTrData
-  
+
   //
   // 1. Compute the approximated diagonal degree matrix The ICD matrix G (NxR will be destroyed)!
-  // D_ii = sum_{j=1}^{N_tr} \Omega_{ij} => \tilde{D}_ii = sum_{j=1}^{N_tr} \tilde{\Omega}_{ij}  = 
+  // D_ii = sum_{j=1}^{N_tr} \Omega_{ij} => \tilde{D}_ii = sum_{j=1}^{N_tr} \tilde{\Omega}_{ij}  =
   // sum_{j=1}^{N_tr} {GG^T}_{ij}  = G [G^T 1_{N}] i.e. first the sum of each of the R cols
   // then each of the N rows of G is multiplied by this vector to give the (N_tr) diagD vector.
   if (verbose>2) {
-    std::cout<< "             ...... degree business starts... " << std::endl;      
+    std::cout<< "             ...... degree business starts... " << std::endl;
   }
   std::vector<T> theAprxDegreeVect(theNumTrData, 0.);
   std::vector<T> dumv(theRankOfAprx, 0.);
@@ -274,14 +274,14 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
     for (size_t ir=ic; ir<theNumTrData; ++ir) { // along memory <- col major : vectorized
       theAprxDegreeVect[ir] += dum0*fIncCholeskyM->GetElem(ir, ic);
     }
-  }  
+  }
   //
-  // 2. Generate the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix: in place of G -> so 
+  // 2. Generate the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix: in place of G -> so
   //    G will be destroyed here:
   //   a. the 1/d_i weighet mean of each of the cols of G needs to be ecomputed
-  //   b. then 1/sqrt(d_i) [G_ij - that] 
+  //   b. then 1/sqrt(d_i) [G_ij - that]
   if (verbose>2) {
-    std::cout<< "             ...... generating D^-1/2 M_D G matrix starts... " << std::endl;        
+    std::cout<< "             ...... generating D^-1/2 M_D G matrix starts... " << std::endl;
   }
   std::vector<T> theInvAprxDegreeVect(theNumTrData);
   std::vector<T> theSqrtInvAprxDegreeVect(theNumTrData);
@@ -308,9 +308,9 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   //
   // 3. QR factorization of the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix prepared at 2.:
   //   a. the input matrix will be overwritten by the upper triangular matrix R;
-  //      matrix Q is not formed but information stored in the input matrix as well 
+  //      matrix Q is not formed but information stored in the input matrix as well
   //      as in the additional theTauVect col vector (these will be used later)
-  //   b. retrive the (RxR) upper triangular matrix of \tilde{D}^{-1/2}M_{\tilde{D}}G = QR 
+  //   b. retrive the (RxR) upper triangular matrix of \tilde{D}^{-1/2}M_{\tilde{D}}G = QR
   // a.: create the tau vector and allocate the memory
   Matrix<T> theSigmaVect(theRankOfAprx, 1);
   theBlas.Malloc(theSigmaVect);
@@ -318,11 +318,11 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
 //
 // === ON DEVICE computation:
 //   Perform the QR decomposition of the \tilde{D}^{-1/2}M_{\tilde{D}}G matrix,
-//   the SVD decompositon of the resulted R matrix, computation of the eigenvectors 
+//   the SVD decompositon of the resulted R matrix, computation of the eigenvectors
 //   of the symmetric problem (by left multiplying the left-singular vectors with Q).
-//   (Only is building with the USE_CUBLAS CMake option, i.e. with CUDA support, 
+//   (Only is building with the USE_CUBLAS CMake option, i.e. with CUDA support,
 //    and requested by setting the fUseGPU member.)
-  
+
 #if USE_CUBLAS
   if ( fUseGPU ) {
       BLAS_gpu  theBlas_gpu;
@@ -342,39 +342,39 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
       theBlas_gpu.Calloc(theRM_d);
       theBlas_gpu.GetUpperTriangular(theDMG_d, theRM_d);// theNumTrData, theRankOfAprx
       //
-      // 4. Perform SVD on the R matrix: on completion, R matrix will contain the 
-      //    left singular vectors (all i.e. as many as cols in R) and theSigmaVect 
+      // 4. Perform SVD on the R matrix: on completion, R matrix will contain the
+      //    left singular vectors (all i.e. as many as cols in R) and theSigmaVect
       //    will contain the corresponding singular values.
       // create the sigma vector and allocate memory
       if (verbose>2) {
-        std::cout<< "             ...... SVD starts... on GPU" << std::endl;        
+        std::cout<< "             ...... SVD starts... on GPU" << std::endl;
       }
       Matrix<T> theSigmaVect_d(theRankOfAprx, 1);
       theBlas_gpu.Malloc(theSigmaVect_d);
       // call the SVD
       theBlas_gpu.XGESVD(theRM_d, theSigmaVect_d);
       //
-      // 5. Take the fNumberOfClusters-1 leading left singular vectors into the 
-      //    theAprxEigenvectM and multiply this matrix by Q (from left) to get the 
-      //    fNumberOfClusters-1 leading eigenvectors of the symmetrix problem. 
+      // 5. Take the fNumberOfClusters-1 leading left singular vectors into the
+      //    theAprxEigenvectM and multiply this matrix by Q (from left) to get the
+      //    fNumberOfClusters-1 leading eigenvectors of the symmetrix problem.
       //    (This is why we make a larger, N_tr x fNumberOfClusters-1 matrix
       //    instead of the required R x fNumberOfClusters-1).
-      // NOTE: with intel MKL, the result of ?ormqr depends on the number of columns 
-      //       in the matrix: when computed QA and QB such that the first n=cols of 
+      // NOTE: with intel MKL, the result of ?ormqr depends on the number of columns
+      //       in the matrix: when computed QA and QB such that the first n=cols of
       //       A and B are identical, the first n-cols of the resulted QA and QB are
-      //       not identical (small numerical differences). To avoid this, the 
-      //       matrix Q (theNumTrData, theRankOfAprx) is formed explicitely and QU 
+      //       not identical (small numerical differences). To avoid this, the
+      //       matrix Q (theNumTrData, theRankOfAprx) is formed explicitely and QU
       //       is computed.
       // form Q (in the Ichol matrix)
       if (verbose>2) {
-        std::cout<< "             ...... computing QU starts ... GPU" << std::endl;            
+        std::cout<< "             ...... computing QU starts ... GPU" << std::endl;
       }
-      theBlas_gpu.XORGQR(theDMG_d, theTauVect_d); 
+      theBlas_gpu.XORGQR(theDMG_d, theTauVect_d);
       // take the K-1 left singular vectors into U
       Matrix<T>  theUM_d(theRankOfAprx, fNumberOfClusters-1);
       theBlas_gpu.Malloc(theUM_d);
       theBlas_gpu.CopyOnGPU(theRM_d.GetDataPtr(), theUM_d.GetDataPtr(), sizeof(T)*theRankOfAprx*(fNumberOfClusters-1));
-      // compute QU into theAprxEigenvectM (that's the matrix with the \beta eigenvects) 
+      // compute QU into theAprxEigenvectM (that's the matrix with the \beta eigenvects)
       Matrix<T>  theAprxEigenvectM_d(theAprxEigenvectM.GetNumRows(), theAprxEigenvectM.GetNumCols());
       theBlas_gpu.Calloc(theAprxEigenvectM_d);
       theBlas_gpu.XGEMM(theDMG_d, theUM_d, theAprxEigenvectM_d);
@@ -392,13 +392,13 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
       theBlas.Free(*fIncCholeskyM);
       delete fIncCholeskyM;
       fIncCholeskyM = nullptr;
-  } else {    
+  } else {
 #endif  // USE_CUBLAS
-  // not USE_CUBLAS: keep computaing the QR, SVD and QU on the CPU 
+  // not USE_CUBLAS: keep computaing the QR, SVD and QU on the CPU
   if (verbose>2) {
     std::cout<< "             ...... QR starts... " << std::endl;
   }
-  Matrix<T> theTauVect(theRankOfAprx, 1);    
+  Matrix<T> theTauVect(theRankOfAprx, 1);
   theBlas.Malloc(theTauVect);
   // call QR factorization
   theBlas.XGEQRF(*fIncCholeskyM, theTauVect);
@@ -411,42 +411,42 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
     }
   }
   //
-  // 4. Perform SVD on the R matrix: on completion, R matrix will contain the 
-  //    left singular vectors (all i.e. as many as cols in R) and theSigmaVect 
+  // 4. Perform SVD on the R matrix: on completion, R matrix will contain the
+  //    left singular vectors (all i.e. as many as cols in R) and theSigmaVect
   //    will contain the corresponding singular values.
   // create the sigma vector and allocate memory
   if (verbose>2) {
-    std::cout<< "             ...... SVD starts... " << std::endl;        
+    std::cout<< "             ...... SVD starts... " << std::endl;
   }
 //  Matrix<T> theSigmaVect(theRankOfAprx, 1);
 //  theBlas.Malloc(theSigmaVect);
   // call the SVD
   theBlas.XGESVD(theRM, theSigmaVect);
   //
-  // 5. Take the fNumberOfClusters-1 leading left singular vectors into the 
-  //    theAprxEigenvectM and multiply this matrix by Q (from left) to get the 
-  //    fNumberOfClusters-1 leading eigenvectors of the symmetrix problem. 
+  // 5. Take the fNumberOfClusters-1 leading left singular vectors into the
+  //    theAprxEigenvectM and multiply this matrix by Q (from left) to get the
+  //    fNumberOfClusters-1 leading eigenvectors of the symmetrix problem.
   //    (This is why we make a larger, N_tr x fNumberOfClusters-1 matrix
   //    instead of the required R x fNumberOfClusters-1).
-  // NOTE: with intel MKL, the result of ?ormqr depends on the number of columns 
-  //       in the matrix: when computed QA and QB such that the first n=cols of 
+  // NOTE: with intel MKL, the result of ?ormqr depends on the number of columns
+  //       in the matrix: when computed QA and QB such that the first n=cols of
   //       A and B are identical, the first n-cols of the resulted QA and QB are
-  //       not identical (small numerical differences). To avoid this, the 
-  //       matrix Q (theNumTrData, theRankOfAprx) is formed explicitely and QU 
+  //       not identical (small numerical differences). To avoid this, the
+  //       matrix Q (theNumTrData, theRankOfAprx) is formed explicitely and QU
   //       is computed.
   // form Q (in the Ichol matrix)
   if (verbose>2) {
-    std::cout<< "             ...... computing QU starts ... " << std::endl;            
+    std::cout<< "             ...... computing QU starts ... " << std::endl;
   }
-  theBlas.XORGQR(*fIncCholeskyM, theTauVect); 
+  theBlas.XORGQR(*fIncCholeskyM, theTauVect);
   // take the K-1 left singular vectors into U
   Matrix<T>  theUM(theRankOfAprx, fNumberOfClusters-1);
   theBlas.Malloc(theUM);
   std::memcpy(theUM.GetDataPtr(), theRM.GetDataPtr(), sizeof(T)*theRankOfAprx*(fNumberOfClusters-1));
-  // compute QU into theAprxEigenvectM (that's the matrix with the \beta eigenvects) 
+  // compute QU into theAprxEigenvectM (that's the matrix with the \beta eigenvects)
   theBlas.XGEMM(*fIncCholeskyM, theUM, theAprxEigenvectM);
   //
-  // theTauVect, theRM and fIncCholeskyM can be freed here  
+  // theTauVect, theRM and fIncCholeskyM can be freed here
   theBlas.Free(theTauVect);
   theBlas.Free(theRM);
   theBlas.Free(theUM);
@@ -454,13 +454,13 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   delete fIncCholeskyM;
   fIncCholeskyM = nullptr;
 #if USE_CUBLAS
-  }  
+  }
 #endif  // USE_CUBLAS
   //
-  // 6. Compute the approximated eigenvectors of the original, non-symetric problem 
-  //    by left multiplying theAprxEigenvectM (\beta-s) with \tilde{D}^-1/2 
+  // 6. Compute the approximated eigenvectors of the original, non-symetric problem
+  //    by left multiplying theAprxEigenvectM (\beta-s) with \tilde{D}^-1/2
   if (verbose>2) {
-    std::cout<< "             ...... computing the original eigenvectors starts ... " << std::endl;            
+    std::cout<< "             ...... computing the original eigenvectors starts ... " << std::endl;
   }
   for (size_t ic=0; ic<fNumberOfClusters-1; ++ic) {
     for (size_t ir=0; ir<theNumTrData; ++ir) {
@@ -471,13 +471,13 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
   // The fNumberOfClusters-1 apporximated eigenvectors of the D^{-1}M_D Omega
   // matrix are now in the theAprxEigenvectM matrix !!!
   //
-  // 7. Calculation of the approximated bias terms according to 
+  // 7. Calculation of the approximated bias terms according to
   //   \tilde{b}^{(l)} = \farc{1}{n_{tr}}[\lambda^{(l)}-1]\mathbb{1}_{N_{tr}}\tilde{D}\tilde{\mathbf{\beta}}^{(l)} l=1,..,#clusters-1
   // NOTE: it's needed only in case of BLF and AMS quality measures
 //  Matrix<T> theAprxBiasTermsM(fNumberOfClusters-1, 1);
 //  theBlas.Malloc(theAprxBiasTermsM);
   if (verbose>2) {
-    std::cout<< "             ...... computing bias terms starts ... " << std::endl;          
+    std::cout<< "             ...... computing bias terms starts ... " << std::endl;
   }
   if (fTheAprxBiasTermsM) {
     const T invNumTrData = 1./theNumTrData;
@@ -490,8 +490,8 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeApproximatedEigenvectors(Matrix<T>& t
       fTheAprxBiasTermsM->SetElem ( ic, 0, dum0*(dum1*dum1-1.)*invNumTrData );
     }
   }
-  // clean the memory allocated for theSigmaVect 
-  theBlas.Free(theSigmaVect);  
+  // clean the memory allocated for theSigmaVect
+  theBlas.Free(theSigmaVect);
 }
 
 
@@ -503,7 +503,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Tune(std::vector<TKernelParameterType>& theK
   // create the BLAS for memory managment and to call CPU BLAS, LAPACK methods
   BLAS  theBlas;
   theBlas.SetNumThreads(numBLASThreads, verbose);
-  // set dimensions: number, dimension of the training data and the rank of the 
+  // set dimensions: number, dimension of the training data and the rank of the
   //                 incomplete Cholesky approximation i.e. number of cols in G
 //  const size_t theNumTrData   = fInputTrainingDataM->GetNumRows(); // (N_tr); row major!
 //  const size_t theDimTrData   = fInputTrainingDataM->GetNumCols(); // each row is one data
@@ -513,7 +513,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Tune(std::vector<TKernelParameterType>& theK
   size_t optimalKernelParameterIndx = 0;
   size_t optimalNumberOfClusters    = 0;
   T      optimalQMValue             = 0.;
-  // the kernel parameter axis of the 2D grid is given as input but the number 
+  // the kernel parameter axis of the 2D grid is given as input but the number
   // of clusters one needs to be generated (note: its relatively cheap to generate
   // model for a given cluster number after the max-clusyert number is done)
   const size_t theSizeNumberOfClustersVect = maxNumberOfClusters - minNumberOfClusters + 1;
@@ -522,86 +522,86 @@ KscWkpcaIChol<TKernel, T, TInputD>::Tune(std::vector<TKernelParameterType>& theK
     theNumberOfClustersVect[i] = minNumberOfClusters+i;
   }
   //
-  // Allocate the tuning result matrix to store the quality measure values over 
+  // Allocate the tuning result matrix to store the quality measure values over
   // the 2D 'kernel parameter(index)' - 'number of clusters' grid.
   if (fTheResTuningM) {
     theBlas.Free(*fTheResTuningM);
     delete fTheResTuningM;
   }
-  fTheResTuningM = new Matrix<T, false>(theKernelParametersVect.size(), theSizeNumberOfClustersVect); 
+  fTheResTuningM = new Matrix<T, false>(theKernelParametersVect.size(), theSizeNumberOfClustersVect);
   theBlas.Calloc(*fTheResTuningM);
   //
   // Make a copy of the Incomplete Cholesky Matrix: it will be destroyed and
-  // the corresponding memory will be freed when calculating the eigenvectors. 
-  // So 1. save the current pointer to the orignal Ichol matrix, make a copy of 
-  // the matrix and set the fIncCholeskyM pointer to that (the copy will be 
-  // destroyed) and reset the fIncCholeskyM pointer to the original, untouched 
+  // the corresponding memory will be freed when calculating the eigenvectors.
+  // So 1. save the current pointer to the orignal Ichol matrix, make a copy of
+  // the matrix and set the fIncCholeskyM pointer to that (the copy will be
+  // destroyed) and reset the fIncCholeskyM pointer to the original, untouched
   // matrix at the end.
   Matrix<T>* fIncCholeskyM_ptr = fIncCholeskyM;
   //
   // == the approximated score variable matrix with max required capacity
   Matrix<T> theAprxTestScoreVariableM(maxNumberOfClusters-1, theNumValidData);
-  theBlas.Malloc(theAprxTestScoreVariableM); // will be set to zero 
-  // == the reduced-valid set kernel matrix 
+  theBlas.Malloc(theAprxTestScoreVariableM); // will be set to zero
+  // == the reduced-valid set kernel matrix
   Matrix<T> theReducedValidSetKernelM(theRankOfAprx, theNumValidData);
   theBlas.Malloc(theReducedValidSetKernelM);
-  // == clustering results 
+  // == clustering results
   Matrix<T, false> theClusterMembershipM(theNumValidData, 2);
   theBlas.Malloc(theClusterMembershipM);
   //
 
-const int kThreads = numBLASThreads;  
+const int kThreads = numBLASThreads;
 KscEncodingAndQM<T>* theObjVect[kThreads];
-Matrix<T, false>*    theClusterMembershipMVect[kThreads]; 
+Matrix<T, false>*    theClusterMembershipMVect[kThreads];
 std::vector<int> intIndx(kThreads);
 for (int i=0; i<kThreads; ++i)  {
   if (fEncodingAndQM->GetQualityMeasureType()        == KscQMType::kAMS) {
      theObjVect[i] = new KscEncodingAndQM_AMS<T>();
   } else if (fEncodingAndQM->GetQualityMeasureType() == KscQMType::kBAS) {
-     theObjVect[i] = new KscEncodingAndQM_BAS<T>();  
+     theObjVect[i] = new KscEncodingAndQM_BAS<T>();
   } else {
-     theObjVect[i] = new KscEncodingAndQM_BLF<T>();  
+     theObjVect[i] = new KscEncodingAndQM_BLF<T>();
   }
   theObjVect[i]->SetCoefEtaBalance(fEncodingAndQM->GetCoefEtaBalance());
   theObjVect[i]->SetOutlierThreshold(fEncodingAndQM->GetOutlierThreshold());
   theClusterMembershipMVect[i] = new Matrix<T, false>(theNumValidData, 2);
   theBlas.Malloc(*(theClusterMembershipMVect[i]));
 }
-std::vector<std::thread> theThreads(kThreads);  
- 
-  // loop over the given kernel parametres  
+std::vector<std::thread> theThreads(kThreads);
+
+  // loop over the given kernel parametres
   for (size_t ikp=0; ikp<theKernelParametersVect.size(); ++ikp) {
     if (verbose > 1 ) {
       std::cout<< "  === KscWkpcaIChol::Tune : tuning for the " << ikp << "-th kernel parameters out of the " << theKernelParametersVect.size()-1<< std::endl;
     }
     // 1. Make a copy of the Incomplete Cholesky Matrix: it will be destroyed and
-    //    the corresponding memory will be freed when calculating the eigenvectors. 
+    //    the corresponding memory will be freed when calculating the eigenvectors.
     if (verbose > 2 ) {
-      std::cout<< "      --- Starts copy ichol matrix... " << std::endl;  
+      std::cout<< "      --- Starts copy ichol matrix... " << std::endl;
     }
     fIncCholeskyM = new Matrix<T>(fIncCholeskyM_ptr->GetNumRows(), fIncCholeskyM_ptr->GetNumCols());
     theBlas.Malloc(*fIncCholeskyM);
     memcpy(fIncCholeskyM->GetDataPtr(), fIncCholeskyM_ptr->GetDataPtr(), sizeof(T)*fIncCholeskyM_ptr->GetSize());
-    // 2. Use the current kernel parameters, train a model and evaluate its 
-    //    performance on the test-data set at each possible number-of-clusters 
+    // 2. Use the current kernel parameters, train a model and evaluate its
+    //    performance on the test-data set at each possible number-of-clusters
     //    on the [minNumberOfClusters, maxNumberOfClusters].
-    //  2.1. - Set the kernel parameters to the current value and the number of 
+    //  2.1. - Set the kernel parameters to the current value and the number of
     //         required clusters to maxNumberOfClusters
     fKernel->SetParameters(theKernelParametersVect[ikp]);
     fNumberOfClusters = maxNumberOfClusters;
-    //  2.2. - Train a model with using this maxNumberOfClusters using the training 
-    //         data: this will set the model (reduced set data and coefficients 
-    //         matrix, generates the membership encoding and the approximated 
+    //  2.2. - Train a model with using this maxNumberOfClusters using the training
+    //         data: this will set the model (reduced set data and coefficients
+    //         matrix, generates the membership encoding and the approximated
     //         bias terms (if needed) ) for maxNumberOfClusters.
     // false => do not cluster and compute QM for the training data
     // NOTE: Training on the Training data set
     if (verbose > 2 ) {
-      std::cout<< "      --- Starts training... " << std::endl;    
+      std::cout<< "      --- Starts training... " << std::endl;
     }
     Train(numBLASThreads, false);
     // === compute the reduced-test set kernel matrix with the current kernle parameters
     if (verbose > 2 ) {
-      std::cout<< "      --- Starts forming the reduced-valid set kenel matrix... " << std::endl;  
+      std::cout<< "      --- Starts forming the reduced-valid set kenel matrix... " << std::endl;
     }
     ComputeKernelMatrix(theReducedValidSetKernelM, *fTheReducedSetDataM, theValidInputDataM, kThreads);
 /*
@@ -612,17 +612,17 @@ std::vector<std::thread> theThreads(kThreads);
         const T valKernel = fKernel->Evaluate(inpData1, inpData2, theDimTrData);
         theReducedValidSetKernelM.SetElem(ir, ic, valKernel);
       }
-    } 
+    }
 */
-       
-    //  2.3. - compute the approximated score variables on the TEST set for 
+
+    //  2.3. - compute the approximated score variables on the TEST set for
     //         the maxNumberOfClusters-1 case: theAprxScoreVariableM with (maxK-1)x(N_test)
     if (verbose > 2 ) {
-      std::cout<< "      --- Score matrix computation... " << std::endl;        
+      std::cout<< "      --- Score matrix computation... " << std::endl;
     }
     std::memset(theAprxTestScoreVariableM.GetDataPtr(), 0, sizeof(T)*theAprxTestScoreVariableM.GetSize());
     theBlas.XGEMM(*fTheReducedSetCoefM, theReducedValidSetKernelM, theAprxTestScoreVariableM);
-    // add the approximated bias terms (only if BLF or AMS) 
+    // add the approximated bias terms (only if BLF or AMS)
     if (fEncodingAndQM->GetQualityMeasureType()!=KscQMType::kBAS) {
       for (size_t idat=0; idat<theNumValidData; ++idat) {
         for (size_t is=0; is<fNumberOfClusters-1; ++is) {
@@ -631,33 +631,33 @@ std::vector<std::thread> theThreads(kThreads);
       }
     }
     // 3. Loop over all possible number of clusters and for eack K [minK, maxK]:
-    //  3.1. - form the code book for the current cluster number, perform the 
+    //  3.1. - form the code book for the current cluster number, perform the
     //         clustering of the test data set and compute the quality measure
     if (verbose > 2 ) {
-      std::cout<< "      --- Starts clustering for each possible cluster number K in [K_min, K_max] ... " << std::endl;    
+      std::cout<< "      --- Starts clustering for each possible cluster number K in [K_min, K_max] ... " << std::endl;
     }
-int ic = theSizeNumberOfClustersVect-1; 
+int ic = theSizeNumberOfClustersVect-1;
 int nn = (theSizeNumberOfClustersVect/(double)kThreads);
-for (int ii=0; ii<nn; ++ii)  {  
+for (int ii=0; ii<nn; ++ii)  {
   Matrix<T>* encodeMatrix = fEncodingAndQM->GetQualityMeasureType() == KscQMType::kBAS ?  fTheReducedSetCoefM : fTheAprxScoreVariableM;
-  
-  // NOTE: in case of BLF the K=2 case will be skipped and left to the tail processing 
+
+  // NOTE: in case of BLF the K=2 case will be skipped and left to the tail processing
   for (int t=0; t<kThreads; ++t) {
     if (fEncodingAndQM->GetQualityMeasureType() != KscQMType::kBLF || theNumberOfClustersVect[ic] != 2) {
-      theThreads[t] = std::thread(&KscEncodingAndQM<T>::DoAll, theObjVect[t], std::move(encodeMatrix), theNumberOfClustersVect[ic], std::move(&theAprxTestScoreVariableM), std::move(theClusterMembershipMVect[t]));      
+      theThreads[t] = std::thread(&KscEncodingAndQM<T>::DoAll, theObjVect[t], std::move(encodeMatrix), theNumberOfClustersVect[ic], std::move(&theAprxTestScoreVariableM), std::move(theClusterMembershipMVect[t]));
       //theObjVect[t]->DoAll(encodeMatrix, fNumberOfClusters, &theAprxTestScoreVariableM, theClusterMembershipMVect[ic%kThreads]);
-    } 
+    }
     intIndx[t] = ic;
     --ic;
   }
-  
+
   for (int t=0; t<kThreads; ++t) {
     if (fEncodingAndQM->GetQualityMeasureType() == KscQMType::kBLF && theNumberOfClustersVect[intIndx[t]] == 2) {
       ++ic;
       continue;
     }
     theThreads[t].join();
-  }  
+  }
   for (int t=0; t<kThreads; ++t) {
     if (fEncodingAndQM->GetQualityMeasureType() == KscQMType::kBLF && theNumberOfClustersVect[intIndx[t]] == 2) {
       continue;
@@ -688,21 +688,21 @@ for (;ic>-1; ic--) {
 //    for (int ic=theSizeNumberOfClustersVect-1; ic>-1; ic--) {
 //      fNumberOfClusters = theNumberOfClustersVect[ic];
 
-      // generate code book for the given number of clusters on the Training Set 
+      // generate code book for the given number of clusters on the Training Set
       // i.e. on theAp
       // NOTE on the TRAINING SET
       if (fEncodingAndQM->GetQualityMeasureType()!=KscQMType::kBAS) {
         fEncodingAndQM->GenerateCodeBook(*fTheAprxScoreVariableM, fNumberOfClusters);
       } else {
         fEncodingAndQM->GenerateCodeBook(*fTheReducedSetCoefM, fNumberOfClusters);
-      }  
+      }
       // perform the clustering and the quality measure computation
       T theQMValue = 0.;
       if (fEncodingAndQM->GetQualityMeasureType()==KscQMType::kBLF) {
         // == BLF ===============================================================
         fEncodingAndQM->ClusterDataSet(theAprxTestScoreVariableM, theClusterMembershipM, 0);
-        // in case of BLF and K=2: compute the second variable vector as the col 
-        // sums of the theReducedValidSetKernelM RxN_tr that gives the N_test 
+        // in case of BLF and K=2: compute the second variable vector as the col
+        // sums of the theReducedValidSetKernelM RxN_tr that gives the N_test
         // second variable by adding the corresponding single bias term.
         Matrix<T>* theSecondVarForBLFM = nullptr;
         if (fNumberOfClusters==2) {
@@ -729,18 +729,18 @@ for (;ic>-1; ic--) {
         // == BAS ===============================================================
         fEncodingAndQM->ClusterDataSet(theAprxTestScoreVariableM, theClusterMembershipM, 1);
         theQMValue = fEncodingAndQM->ComputeQualityMeasure(theClusterMembershipM);
-      }        
+      }
       // check the resulted quality measure
       if (theQMValue>optimalQMValue) {
         optimalQMValue             = theQMValue;
         optimalKernelParameterIndx = ikp;
         optimalNumberOfClusters    = fNumberOfClusters;
       }
-      fTheResTuningM->SetElem(ikp, ic, theQMValue);    
+      fTheResTuningM->SetElem(ikp, ic, theQMValue);
     }
 
 
-    
+
   }
   //
   // delete all memory allocated for threads!!!
@@ -750,13 +750,13 @@ for (;ic>-1; ic--) {
     delete theClusterMembershipMVect[i];
   }
   //
-  // CLEAN ALLOCATED MEMORY 
+  // CLEAN ALLOCATED MEMORY
   theBlas.Free(theAprxTestScoreVariableM);
   theBlas.Free(theReducedValidSetKernelM);
   theBlas.Free(theClusterMembershipM);
   //
   //
-// this is the result of the all tuning !!!  
+// this is the result of the all tuning !!!
 //  if (fTheResTuningM) {
 //    theBlas.Free(*fTheResTuningM);
 //    delete fTheResTuningM;
@@ -784,9 +784,9 @@ KscWkpcaIChol<TKernel, T, TInputD>::Test(Matrix<TInputD, false>& theTestInputDat
   BLAS  theBlas;
   theBlas.SetNumThreads(numBLASThreads, verbose);
   // set dimensions: reduced set size and test set size
-  const size_t theDimTrData  = fInputTrainingDataM->GetNumCols();
+  const size_t theDimTrData   = fInputTrainingDataM->GetNumCols();
   const size_t theRankOfAprx  = fTheReducedSetDataM->GetNumRows();
-  const size_t theNumTestData = theTestInputDataM.GetNumRows();  
+  const size_t theNumTestData = theTestInputDataM.GetNumRows();
   //
   assert (theDimTrData==theTestInputDataM.GetNumCols() && " Training and Test data must have the same type (i.e. dimensions)");
   // allocate memory for the reduced-set - test-set kernel matrix and fill it
@@ -800,10 +800,10 @@ KscWkpcaIChol<TKernel, T, TInputD>::Test(Matrix<TInputD, false>& theTestInputDat
       theReducedTestSetKernelM.SetElem(ir, ic, valKernel);
     }
   }
-  // compute the approximated score variables of the TEST set 
+  // compute the approximated score variables of the TEST set
   //  - theAprxScoreVariableM with (K-1)x(N_test)
   Matrix<T> theAprxTestScoreVariableM(fNumberOfClusters-1, theNumTestData);
-  theBlas.Calloc(theAprxTestScoreVariableM); 
+  theBlas.Calloc(theAprxTestScoreVariableM);
   theBlas.XGEMM(*fTheReducedSetCoefM, theReducedTestSetKernelM, theAprxTestScoreVariableM);
   // add the approximated bias terms (only if BLF or AMS)
   if (fEncodingAndQM->GetQualityMeasureType()!=KscQMType::kBAS) {
@@ -815,7 +815,7 @@ KscWkpcaIChol<TKernel, T, TInputD>::Test(Matrix<TInputD, false>& theTestInputDat
   }
   //
   // === Perform the clustering and the quality measure computation
-  // 
+  //
   // clean the membership matrix and allocate memory
   size_t ncl = qmFlag<2 ? qmFlag+1 : fNumberOfClusters+1;
   if (fTheClusterMembershipM) {
@@ -829,8 +829,8 @@ KscWkpcaIChol<TKernel, T, TInputD>::Test(Matrix<TInputD, false>& theTestInputDat
   if (fEncodingAndQM->GetQualityMeasureType()==KscQMType::kBLF) {
     // == BLF ===============================================================
     fEncodingAndQM->ClusterDataSet(theAprxTestScoreVariableM, *fTheClusterMembershipM, qmFlag);
-    // in case of BLF and K=2: compute the second variable vector as the col 
-    // sums of the theReducedValidSetKernelM RxN_tr that gives the N_test 
+    // in case of BLF and K=2: compute the second variable vector as the col
+    // sums of the theReducedValidSetKernelM RxN_tr that gives the N_test
     // second variable by adding the corresponding single bias term.
     Matrix<T>* theSecondVarForBLFM = nullptr;
     if (fNumberOfClusters==2) {
@@ -857,12 +857,12 @@ KscWkpcaIChol<TKernel, T, TInputD>::Test(Matrix<TInputD, false>& theTestInputDat
     // == BAS ===============================================================
     fEncodingAndQM->ClusterDataSet(theAprxTestScoreVariableM, *fTheClusterMembershipM, qmFlag);
     theQMValue = fEncodingAndQM->ComputeQualityMeasure(*fTheClusterMembershipM);
-  }  
+  }
   _unused(theQMValue);
-  // clean memory allocated 
+  // clean memory allocated
   theBlas.Free(theAprxTestScoreVariableM);
   theBlas.Free(theReducedTestSetKernelM);
-} 
+}
 
 
 template <class TKernel, typename T,  typename TInputD>
@@ -872,8 +872,8 @@ KscWkpcaIChol<TKernel, T, TInputD>::ComputeKernelMatrix(Matrix<T>& theKernelM, M
   // theKernelM.GetNumCols() input data will be used from theColDataM to generate the cols of the K(row, col)
   // const size_t numRows = theKernelM.GetNumRows();
   const size_t numCols = theKernelM.GetNumCols();
-  // split along the col 
-  //   ==> each thread will fill along rows -> memory continous 
+  // split along the col
+  //   ==> each thread will fill along rows -> memory continous
   //   ==> each thread will take one continous data from theRowDataM
   const size_t sizeBlocks = (numThreads > 1) ? numCols/(double)numThreads : 0 ;
   size_t ic = 0;

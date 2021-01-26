@@ -9,6 +9,9 @@
 # required CMake version
 cmake_minimum_required (VERSION 3.3.0 FATAL_ERROR)
 
+# 
+#cmake_policy( SET CMP0104 OLD )
+
 # set the project name 
 SET (PROJECTNAME "leuven")
 SET (LIBNAME "lib${PROJECTNAME}")

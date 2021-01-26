@@ -45,14 +45,16 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
-    'sphinx.ext.mathjax',    
+    'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',    # to have the [source] option in the doc
-    'nbsphinx',               # for jupiter notebook conversions  
+    'nbsphinx',               # for jupiter notebook conversions
     'sphinx.ext.napoleon',    # for the google-style doc
     'breathe',                # mixed doxygen and sphinx doc with breathe
     'sphinxcontrib.bibtex'    # to use bibtex
 ]
+
+bibtex_bibfiles = ['bibfile.bib']
 
 # set path to the doxygen-generated XML for breathe
 breathe_projects = { 'The leuven Library and Framework Documentation': '../doxygen/xml' }
@@ -103,3 +105,10 @@ latex_elements = {
 #  'fncychap': '\\usepackage[Conny]{fncychap}',
 #    \usepackage{mathtools}
 }
+
+
+##
+## generate `requirements` file for rtfd:
+## conda env export -f environment.yml
+## then strip down the 'environment.yml' into a 'requirements' file by simple
+## listing all packages
