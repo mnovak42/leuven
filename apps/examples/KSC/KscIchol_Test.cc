@@ -21,7 +21,7 @@
 
 //#define CHI2
 
-// Define data type to be used in the computtaions (double or float)
+// Define data type to be used in the computaions (double or float)
 typedef double DTYPE;
 //typedef float DTYPE;
 //
@@ -31,14 +31,16 @@ typedef double INP_DTYPE;
 //typedef float INP_DTYPE;
 
 //
-// Training the KCS model on a given training data set using the RBF kernel and
-// apply the trained model to cluster the test data set.
+// Training the sparse KCS model on a given training data set using the RBF
+// kernel and apply the trained model to cluster the test data set.
 //  1. Performs the Incomplete Cholesky factorization of the taraining data
 //     kernel martix.
 //  2. Trains a sparese KSC model ontained by using the reduced set method.
-//  3. Clusters the input test data set using the trained KSC model.
+//  3. Clusters the test data set using the sparse KSC model tranined in the
+//     previous step.
 //
-//  How to: execute ./KscIchol_Test to see the required and optional arguments
+//  How to: execute `./KscIchol_Test --help` to see the required/optional
+//          input arguments
 //
 int main(int argc, char **argv) {
   // ===========================================================================
@@ -58,7 +60,7 @@ int main(int argc, char **argv) {
     struct timeval start;   // initial time stamp - for timing
     struct timeval finish;  // final time stamp   - for timing
     BLAS           theBlas; // only for Matrix memory managmenet here in main
-    const bool     theUseGPU      = theInParams.fUseGPU;              // use GPU in training ?
+    const bool     theUseGPU      = theInParams.fUseGPU;              // use GPU in training
     const size_t   theNumTrData   = theInParams.fTheTrDataNumber;     // #training data
     const size_t   theDimTrData   = theInParams.fTheTrDataDimension;  // its dimension
     const size_t   theNumTestData = theInParams.fTheTestDataNumber;   // #test data
@@ -71,10 +73,11 @@ int main(int argc, char **argv) {
   //   Create input training data matrix, allocate memory and load
   //   Note:
   //    - the matrix must be row-major: each input data occupies one row of the
-  //      matrix in memory continous way.
+  //      matrix in a memory continous way.
   //    - with type of INP_DTYPE: input data will be stored in this type and the
   //      kernel function will receive two pointers to two rows of the matrix
-  //      with this type (i.e. const INP_DTYPE*).
+  //      with this type (i.e. const INP_DTYPE*) together with their (common)
+  //      dimension.
     if (theInParams.fTheVerbosityLevel > 1) {
       std::cout << "\n ---- Starts: allocating memory for and loading the training data." << std::endl;
     }
@@ -97,8 +100,8 @@ int main(int argc, char **argv) {
   //   RBF kernel function will be used with DTYPE return type (must be the same
   //   as the computating type i.e. either double or float) and will operate
   //   on INP_DTYPE values that, in this case, is the same type as the input data.
-  //   The ICD will be done in DTYPE data (double or float) and operates on the
-  //   INP_DTYPE type.
+  //   The ICD will be done in DTYPE data (double or float) i.e. operates on the
+  //   INP_DTYPE type. (Chi2 kernel can also be used)
 #ifdef CHI2
   IncCholesky<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE> theIncCholesky;
 #else
@@ -158,7 +161,7 @@ int main(int argc, char **argv) {
   // ----------------------
   //   Training the KSC model using the setting (number of desired clusters,
   //   cluster membership encoding, kernel parameter, etc.) given by the input
-  //   arguments (a 1D RBF-kernel). The ...
+  //   arguments.(Chi2 kernel can also be used)
   #ifdef CHI2
     KscWkpcaIChol<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKscWkpcaIchol;
   #else
@@ -209,15 +212,8 @@ int main(int argc, char **argv) {
       std::cout << "      --->   Quality value  : " << theEncoding->GetTheQualityMeasureValue() << std::endl;
       std::cout << "      --->   Eta balance    : " << theEncoding->GetCoefEtaBalance()         << std::endl;
       std::cout << "      --->   Outlier thres. : " << theEncoding->GetOutlierThreshold()       << std::endl;
-//      if (theInParams.fTheClusterLevel>0) {
-//        std::cout << "      ---> Result is writen : " << std::endl;
-//        std::cout << "      --->   Clustering     : " << theInParams.fTheClusterResFile     << std::endl;
-//        std::cout << "      --->   Training data  : " << theInParams.fTheClusterResDataFile <<std::endl;
-//      }
       std::cout << std::endl;
     }
-    // free allocated memory
-    theBlas.Free(thePermInputTrainingDataM);
   // ===========================================================================
 
 
@@ -245,8 +241,6 @@ int main(int argc, char **argv) {
   // ===========================================================================
   // Perform the testing i.e. cluster assigment of the test data:
   // ------------------------------------------------------------
-  // 1. the input test data matrix: it's used only to get the data dimension
-    theKscWkpcaIchol.SetInputTrainingDataMatrix(&theInputTestDataM);
     if (theInParams.fTheVerbosityLevel > 0) {
       std::cout << "\n ---- Starts: clustering the test data with the KSC model." << std::endl;
     }
@@ -270,8 +264,6 @@ int main(int argc, char **argv) {
       std::cout << "      --->   Clustering     : " << theInParams.fTheClusterResFile           << std::endl;
       std::cout << std::endl;
     }
-    // free allocated memory
-    theBlas.Free(theInputTestDataM);
   // ===========================================================================
 
 
@@ -292,7 +284,11 @@ int main(int argc, char **argv) {
     }
     std::cout << std::endl;
   }
-  // free remaining allocated memeory
+
+
+  // free allocated memory
+  theBlas.Free(thePermInputTrainingDataM);
+  theBlas.Free(theInputTestDataM);
   theBlas.Free(thePermutationVector);
 
   return EXIT_SUCCESS;

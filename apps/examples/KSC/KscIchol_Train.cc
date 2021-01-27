@@ -31,12 +31,14 @@ typedef double INP_DTYPE;
 //typedef float INP_DTYPE;
 
 //
-// Training the KCS model on a given training data set using the RBF kernel:
+// Training the sparse KCS model on a given training data set using the RBF
+// kernel:
 //  1. Performs the Incomplete Cholesky factorization of the taraining data
 //     kernel martix.
 //  2. Trains a sparese KSC model ontained by using the reduced set method.
 //
-//  How to: execute ./KscIchol_Train to see the required and optional arguments
+//  How to: execute `./KscIchol_Train --help` to see the required/optional input
+//          arguments.
 //
 int main(int argc, char **argv) {
   // ===========================================================================
@@ -56,7 +58,7 @@ int main(int argc, char **argv) {
     struct timeval start;   // initial time stamp - for timing
     struct timeval finish;  // final time stamp   - for timing
     BLAS           theBlas; // only for Matrix memory managmenet here in main
-    const bool     theUseGPU    = theInParams.fUseGPU;            // use GPU in training ?
+    const bool     theUseGPU    = theInParams.fUseGPU;            // use GPU in training
     const size_t   theNumTrData = theInParams.fTheTrDataNumber;   // #training data
     const size_t   theDimTrData = theInParams.fTheTrDataDimension;// its dimension
   // ===========================================================================
@@ -68,10 +70,11 @@ int main(int argc, char **argv) {
   //   Create input training data matrix, allocate memory and load
   //   Note:
   //    - the matrix must be row-major: each input data occupies one row of the
-  //      matrix in memory continous way.
+  //      matrix in a memory continous way.
   //    - with type of INP_DTYPE: input data will be stored in this type and the
   //      kernel function will receive two pointers to two rows of the matrix
-  //      with this type (i.e. const INP_DTYPE*).
+  //      with this type (i.e. const INP_DTYPE*) together with their (common)
+  //      dimension.
     if (theInParams.fTheVerbosityLevel > 1) {
       std::cout << "\n ---- Starts: allocating memory for and loading the training data." << std::endl;
     }
@@ -234,7 +237,7 @@ int main(int argc, char **argv) {
       }
       std::cout << std::endl;
     }
-    // free remaining allocated memeory 
+    // free remaining allocated memeory
     theBlas.Free(thePermutationVector);
 
 

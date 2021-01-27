@@ -29,12 +29,13 @@ typedef double INP_DTYPE;
 //typedef float INP_DTYPE;
 
 //
-// Training the KCS model on a given training data set using the RBF kernel:
-//  1. Performs the Incomplete Cholesky factorization of the taraining data
-//     kernel martix.
-//  2. Trains a sparese KSC model ontained by using the reduced set method.
+// Training the (non-sparse) KCS model on a given training data set using the
+// RBF kernel:
+//  1. Trains the KSC model on the training data set by using the given hyper
+//     parameters (RBF kernel parameter and required number of clusters).
 //
-//  How to: execute ./KscIchol_Train to see the required and optional arguments
+//  How to: execute `./Ksc_Train --help` to see the required/optional input
+//          arguments.
 //
 int main(int argc, char **argv) {
   // ===========================================================================
@@ -66,10 +67,11 @@ int main(int argc, char **argv) {
   //   Create input training data matrix, allocate memory and load
   //   Note:
   //    - the matrix must be row-major: each input data occupies one row of the
-  //      matrix in memory continous way.
+  //      matrix in a memory continous way.
   //    - with type of INP_DTYPE: input data will be stored in this type and the
   //      kernel function will receive two pointers to two rows of the matrix
-  //      with this type (i.e. const INP_DTYPE*).
+  //      with this type (i.e. const INP_DTYPE*) together with their (common)
+  //      dimension.
     if (theInParams.fTheVerbosityLevel > 1) {
       std::cout << "\n ---- Starts: allocating memory for and loading the training data." << std::endl;
     }
@@ -85,73 +87,13 @@ int main(int argc, char **argv) {
     }
   // ===========================================================================
 
-/*
-  // ===========================================================================
-  // Icomplete Cholesky decomposition of the training data kernel matrix:
-  // --------------------------------------------------------------------
-  //   RBF kernel function will be used with DTYPE return type (must be the same
-  //   as the computating type i.e. either double or float) and will operate
-  //   on INP_DTYPE values that, in this case, is the same type as the input data.
-  //   The ICD will be done in DTYPE data (double or float) and operates on the
-  //   INP_DTYPE type.
-    IncCholesky<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE> theIncCholesky;
-    // set the bandwidth paraneter of the RBF kernel (1D)
-    theIncCholesky.SetKernelParameters(theInParams.fTheIcholRBFKernelPar);
-    // set the input data matrix
-    theIncCholesky.SetInputDataMatrix(&theInputTrainingDataM);
-    // the tolerated error, max number of cols. i.e. max rank will be set and the
-    // transpose of the Cholesky matrix i.e. G \in N_tr x R lower triangular will
-    // be required (this is what the later KSC algorithm implementation assumes).
-    if (theInParams.fTheVerbosityLevel > 0) {
-      std::cout << "\n ---- Starts: incomplete Cholesky decomposition of the Kernel matrix." << std::endl;
-    }
-
-    gettimeofday(&start, NULL);
-    theIncCholesky.Decompose(theInParams.fTheIcholTolError, theInParams.fTheIcholMaxRank, true);
-    gettimeofday(&finish, NULL);
-    double durationICD = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
-    //
-    if (theInParams.fTheVerbosityLevel > 0) {
-      std::cout << " ---- Finished: incomplete Cholesky decomposition of the Kernel matrix"    << std::endl;
-      std::cout << "      ---> Duration of ICD  : " << durationICD << " [s]"                   << std::endl;
-      std::cout << "      ---> Final error      : " << theIncCholesky.GetFinalResidual()             << std::endl;
-      std::cout << "      ---> Rank of the aprx : " << theIncCholesky.GetICholMatrix()->GetNumCols() << std::endl;
-      std::cout << "      ---> Dimensions of G  :(" << theIncCholesky.GetICholMatrix()->GetNumRows()
-                                                    << " x "
-                                                    << theIncCholesky.GetICholMatrix()->GetNumCols()
-                                                    << ")" << std::endl;
-    }
-  // ===========================================================================
-*/
-/*
-  // ===========================================================================
-  // Permutations of the training data:
-  // ----------------------------------
-  //   Perform the permutations on the training data (applied during the incomplete
-  //   Cholesky decomposition of the corresponding kernel matrix)
-    Matrix<INP_DTYPE, false> thePermInputTrainingDataM(theNumTrData, theDimTrData);
-    theBlas.Malloc(thePermInputTrainingDataM);
-    Matrix<int> thePermutationVector(theNumTrData, 1);
-    theBlas.Malloc(thePermutationVector);
-    const std::vector<size_t>& thePermVet = theIncCholesky.GetPermutationVector();
-    for (size_t ir=0; ir<theNumTrData; ++ir) {
-      const size_t ii = thePermVet[ir];
-      for (size_t id=0; id<theDimTrData; ++id) {
-        thePermInputTrainingDataM.SetElem(ir, id, theInputTrainingDataM.GetElem(ii, id));
-      }
-      thePermutationVector.SetElem(ir, 0, thePermVet[ir]);
-    }
-    // the memory allocated for the original input data matrix can be freed
-    theBlas.Free(theInputTrainingDataM);
-  // ===========================================================================
-*/
 
   // ===========================================================================
   // Training the KSC model:
   // ----------------------
-  //   Training the KSC model using the setting (number of desired clusters,
+  //   Training the KSC model using the setting (desired number of clusters,
   //   cluster membership encoding, kernel parameter, etc.) given by the input
-  //   arguments (a 1D RBF-kernel). The ...
+  //   arguments. An RBF kernel is used.
     KscWkpca<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKsc;
     // Set all required members:
     // 1. the 1D RBF kernel paraneter (i.e. bandwidth)
@@ -166,7 +108,7 @@ int main(int argc, char **argv) {
               break;
       case 1: theKsc.SetEncodingAndQualityMeasureType(KscQMType::kAMS);
               break;
-      default: theKsc.SetEncodingAndQualityMeasureType(KscQMType::kAMS);              
+      default: theKsc.SetEncodingAndQualityMeasureType(KscQMType::kAMS);
     }
     // the weight to be given to the balance term in the model evaluation
     theKsc.SetQualityMeasureEtaBalance(theInParams.fTheClusterEvalWBalance);

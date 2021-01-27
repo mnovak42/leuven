@@ -32,10 +32,10 @@ typedef double INP_DTYPE;
 //typedef float INP_DTYPE;
 
 //
-// Tuning the KCS model on the given training and validation data set using the
-// RBF kernel:
-//  1. Performs the Incomplete Cholesky factorization of the taraining data
-//     kernel martix.
+// Hyper parameter tuning of the (non-sparse) KCS model based on a the given
+// training and validation data sets using an RBF kernel:
+//  1. Performs a grid search to find the optimal kernel parameter and cluster
+//     number values based on the given training and validation data sets.
 //  2. At each point of the 2D "kernel parameter" - "number of clusters" grid:
 //     - trains a KSC model on the training data set
 //     - applies the trained KSC model to cluster the validation data set
@@ -44,7 +44,8 @@ typedef double INP_DTYPE;
 //     model selection value is reported and the values of the model evaluation
 //     criterion over the whole 2D grid is saved into a file.
 //
-//  How to: execute ./KscIchol_Tune to see the required and optional arguments
+//  How to: execute `./Ksc_Tune --help` to see the required/optional input
+//          arguments
 //
 int main(int argc, char **argv) {
   // ===========================================================================
@@ -78,10 +79,11 @@ int main(int argc, char **argv) {
   //   Create input training data matrix, allocate memory and load
   //   Note:
   //    - the matrix must be row-major: each input data occupies one row of the
-  //      matrix in memory continous way.
+  //      matrix in a memory continous way.
   //    - with type of INP_DTYPE: input data will be stored in this type and the
   //      kernel function will receive two pointers to two rows of the matrix
-  //      with this type (i.e. const INP_DTYPE*).
+  //      with this type (i.e. const INP_DTYPE*) together with their (common)
+  //      dimension.
     if (theInParams.fTheVerbosityLevel > 1) {
       std::cout << "\n ---- Starts: allocating memory for and loading the training data." << std::endl;
     }
@@ -97,65 +99,6 @@ int main(int argc, char **argv) {
     }
   // ===========================================================================
 
-/*
-  // ===========================================================================
-  // Icomplete Cholesky decomposition of the training data kernel matrix:
-  // --------------------------------------------------------------------
-  //   RBF kernel function will be used with DTYPE return type (must be the same
-  //   as the computating type i.e. either double or float) and will operate
-  //   on INP_DTYPE values that, in this case, is the same type as the input data.
-  //   The ICD will be done in DTYPE data (double or float) and operates on the
-  //   INP_DTYPE type.
-  #ifdef CHI2
-    IncCholesky<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE> theIncCholesky;
-  #else
-    IncCholesky<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE> theIncCholesky;
-  #endif
-    // set the bandwidth paraneter of the RBF kernel (1D)
-    theIncCholesky.SetKernelParameters(theInParams.fTheIcholRBFKernelPar);
-    // set the input data matrix
-    theIncCholesky.SetInputDataMatrix(&theInputTrainingDataM);
-    // the tolerated error, max number of cols. i.e. max rank will be set and the
-    // transpose of the Cholesky matrix i.e. G \in N_tr x R lower triangular will
-    // be required (this is what the later KSC algorithm implementation assumes).
-    if (theInParams.fTheVerbosityLevel > 0) {
-      std::cout << "\n ---- Starts: incomplete Cholesky decomposition of the Kernel matrix." << std::endl;
-    }
-    gettimeofday(&start, NULL);
-    theIncCholesky.Decompose(theInParams.fTheIcholTolError, theInParams.fTheIcholMaxRank, true);
-    gettimeofday(&finish, NULL);
-    double durationICD = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
-    if (theInParams.fTheVerbosityLevel > 0) {
-      std::cout << " ---- Finished: incomplete Cholesky decomposition of the Kernel matrix"    << std::endl;
-      std::cout << "      ---> Duration of ICD  : " << durationICD << " [s]"                   << std::endl;
-      std::cout << "      ---> Final error      : " << theIncCholesky.GetFinalResidual()             << std::endl;
-      std::cout << "      ---> Rank of the aprx : " << theIncCholesky.GetICholMatrix()->GetNumCols() << std::endl;
-      std::cout << "      ---> Dimensions of G  :(" << theIncCholesky.GetICholMatrix()->GetNumRows()
-                                                    << " x "
-                                                    << theIncCholesky.GetICholMatrix()->GetNumCols()
-                                                    << ")" << std::endl;
-    }
-  // ===========================================================================
-
-
-  // ===========================================================================
-  // Permutations of the training data:
-  // ----------------------------------
-  //   Perform the permutations on the training data (applied during the incomplete
-  //   Cholesky decomposition of the corresponding kernel matrix)
-    Matrix<INP_DTYPE, false> thePermInputTrainingDataM(theNumTrData, theDimTrData);
-    theBlas.Malloc(thePermInputTrainingDataM);
-    const std::vector<size_t>& thePermVet = theIncCholesky.GetPermutationVector();
-    for (size_t ir=0; ir<theNumTrData; ++ir) {
-      const size_t ii = thePermVet[ir];
-        for (size_t id=0; id<theDimTrData; ++id) {
-          thePermInputTrainingDataM.SetElem(ir, id, theInputTrainingDataM.GetElem(ii, id));
-        }
-    }
-    // the memory allocated for the original input data matrix can be freed
-    theBlas.Free(theInputTrainingDataM);
-  // ===========================================================================
-*/
 
   // ===========================================================================
   // Input data for validation:
@@ -179,16 +122,16 @@ int main(int argc, char **argv) {
 
 
   // ===========================================================================
-  // Tuning the KSC model using the 1D RBF kernel:
+  // Tuning the KSC model using the RBF kernel:
   // ---------------------------------------------
   //   Tuning the KSC model using the setting (2D grid of kernel and cluster
-  //   numebr parameters, cluster membership encoding, etc.) given by the input
-  //   arguments. The ...
-//#ifdef CHI2
-//  KscWkpca<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKsc;
-//#else
+  //   number parameters, cluster membership encoding, etc.) given by the input
+  //   arguments. (Chi2 kernel can also be used)
+#ifdef CHI2
+  KscWkpca<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKsc;
+#else
   KscWkpca<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE >  theKsc;
-//#endif
+#endif
 
     // Set all required members:
     // 1. the input data matrix (which permutations have already been applied on)
@@ -254,11 +197,11 @@ int main(int argc, char **argv) {
       std::cout << "      ---> Result is written: " << theInParams.fTheResFile << std::endl;
       std::cout << std::endl;
     }
-    // free allocated memory
-    theBlas.Free(theInputValidationDataM);
-    theBlas.Free(theInputTrainingDataM);
   // ===========================================================================
 
+  // free allocated memory
+  theBlas.Free(theInputValidationDataM);
+  theBlas.Free(theInputTrainingDataM);
 
   return EXIT_SUCCESS;
 }
