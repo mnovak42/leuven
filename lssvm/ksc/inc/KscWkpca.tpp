@@ -160,9 +160,9 @@ KscWkpca<TKernel, T, TInputD>::ComputeEigenvectors(Matrix<T>& theTrainingSetKern
   if (verbose>2) {
     std::cout<< "             ...... computing the K-1 leading eigenvectors starts... " << std::endl;
   }
-  Matrix<T> theEigenValueVect0(fNumberOfClusters-1, 1);
+  Matrix<T> theEigenValueVect0(theNumTrData, 1);
   theBlas.Malloc(theEigenValueVect0);
-  Matrix<T> theEigenVectorM0(theNumTrData, fNumberOfClusters-1);
+  Matrix<T> theEigenVectorM0(theNumTrData, theNumTrData);
   theBlas.Malloc(theEigenVectorM0);
   //
   // compute the K-1 leading eignevectors of the training data kernel matrix
@@ -175,9 +175,9 @@ KscWkpca<TKernel, T, TInputD>::ComputeEigenvectors(Matrix<T>& theTrainingSetKern
         std::cout<< "             ...... on GPU" << std::endl;
       }
       // construct and allocate memory for on device
-      Matrix<T> theEigenValueVect_d(fNumberOfClusters-1, 1);
+      Matrix<T> theEigenValueVect_d(theNumTrData, 1);
       Matrix<T> theTrainingSetKernelM_d(theNumTrData, theNumTrData);
-      Matrix<T> theEigenVectorM_d(theNumTrData, fNumberOfClusters-1);
+      Matrix<T> theEigenVectorM_d(theNumTrData, theNumTrData);
       theBlas_gpu.Malloc(theEigenValueVect_d);
       theBlas_gpu.Malloc(theTrainingSetKernelM_d);
       theBlas_gpu.Malloc(theEigenVectorM_d);
