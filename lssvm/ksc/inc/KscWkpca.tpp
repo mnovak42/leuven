@@ -94,7 +94,6 @@ KscWkpca<TKernel, T, TInputD>::Train(size_t numBLASThreads, bool isQMOnTraining,
       // == AMS ===============================================================
       fEncodingAndQM->ClusterDataSet(*fTheTrScoreVariableM, *fTheClusterMembershipM, qmFlag);
       theQMValue = fEncodingAndQM->ComputeQualityMeasure(*fTheClusterMembershipM);
-      std::cout << " theQMValue = " << theQMValue << std::endl;
     }
     _unused(theQMValue);
   }
