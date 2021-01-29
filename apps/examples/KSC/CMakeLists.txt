@@ -4,6 +4,7 @@
 cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
 project(app-ksc)
 
+
 #-------------------------------------------------------------------------------
 # Find the `leuven` library
 #
@@ -12,7 +13,14 @@ if (NOT leuven_FOUND)
   message (FATAL_ERROR "`leuven` library was not found")
 endif ()
 
-find_package(Threads REQUIRED)
+
+#-------------------------------------------------------------------------------
+# Find available thread libraries and prefer pthreads
+#
+set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set (THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package (Threads REQUIRED)
+
 
 #-------------------------------------------------------------------------------
 # Set the same CXX flags that were used when building the `leuven` library
@@ -47,18 +55,18 @@ add_executable (KscIchol_Train   KscIchol_Train.cc   ${sources} ${headers})
 add_executable (KscIchol_Tune    KscIchol_Tune.cc    ${sources} ${headers})
 add_executable (KscIchol_Test    KscIchol_Test.cc    ${sources} ${headers})
 
-add_executable (Ksc_Train   Ksc_Train.cc   ${sources} ${headers})
-add_executable (Ksc_Tune    Ksc_Tune.cc   ${sources} ${headers})
-add_executable (Ksc_Test    Ksc_Test.cc   ${sources} ${headers})
+add_executable (Ksc_Train   Ksc_Train.cc             ${sources} ${headers})
+add_executable (Ksc_Tune    Ksc_Tune.cc              ${sources} ${headers})
+add_executable (Ksc_Test    Ksc_Test.cc              ${sources} ${headers})
 
 #
-target_link_libraries (KscIchol_Train    ${leuven_LIBRARIES})
-target_link_libraries (KscIchol_Tune     ${leuven_LIBRARIES})
-target_link_libraries (KscIchol_Test     ${leuven_LIBRARIES})
+target_link_libraries (KscIchol_Train    ${leuven_LIBRARIES} Threads::Threads)
+target_link_libraries (KscIchol_Tune     ${leuven_LIBRARIES} Threads::Threads)
+target_link_libraries (KscIchol_Test     ${leuven_LIBRARIES} Threads::Threads)
 
-target_link_libraries (Ksc_Train    ${leuven_LIBRARIES})
-target_link_libraries (Ksc_Tune     ${leuven_LIBRARIES})
-target_link_libraries (Ksc_Test     ${leuven_LIBRARIES})
+target_link_libraries (Ksc_Train         ${leuven_LIBRARIES} Threads::Threads)
+target_link_libraries (Ksc_Tune          ${leuven_LIBRARIES} Threads::Threads)
+target_link_libraries (Ksc_Test          ${leuven_LIBRARIES} Threads::Threads)
 
 
 #-------------------------------------------------------------------------------

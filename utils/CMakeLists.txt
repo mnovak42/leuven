@@ -308,7 +308,7 @@ list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/global/definitions.hh)
 ## Setting up the library
 ## ----------------------------------------------------------------------------
 
-message (STATUS "${Green}===== Setting up the ${PROJECTNAME} library =====${ColourReset}")
+message (STATUS "${Green}===== Setting up the leuven library =====${ColourReset}")
 if (USE_CUBLAS)
   enable_language(CUDA)
   SET (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}
@@ -322,21 +322,21 @@ if (USE_CUBLAS)
   file (GLOB CUDASOURCES ${CMAKE_SOURCE_DIR}/utils/src/CUBLAS.cu)
   list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/CUBLAS.hh ${CMAKE_SOURCE_DIR}/utils/inc/CUBLAS.tpp)
   #
-  cuda_add_library(${PROJECTNAME} STATIC ${CXXSOURCES} ${CUDASOURCES})
-  set_property(TARGET ${PROJECTNAME} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-  set_property(TARGET ${PROJECTNAME} PROPERTY CUDA_ARCHITECTURES 30)
-  target_link_libraries(${PROJECTNAME} ${CPU_BLAS_LIBRARY} ${CUDA_LIBRARY}
+  cuda_add_library(leuven STATIC ${CXXSOURCES} ${CUDASOURCES})
+  set_property(TARGET leuven PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+  set_property(TARGET leuven PROPERTY CUDA_ARCHITECTURES 30)
+  target_link_libraries(leuven ${CPU_BLAS_LIBRARY} ${CUDA_LIBRARY}
                       ${CUDA_cudart_static_LIBRARY} ${CUDA_CUBLAS_LIBRARY}
                       ${CUDA_cusolver_LIBRARY})
-  set_target_properties(${PROJECTNAME} PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})
+  set_target_properties(leuven PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})
 else ()
-  add_library(${PROJECTNAME} STATIC ${CXXSOURCES})
-  target_link_libraries(${PROJECTNAME} ${CPU_BLAS_LIBRARY})
-  set_target_properties(${PROJECTNAME} PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})
+  add_library(leuven STATIC ${CXXSOURCES})
+  target_link_libraries(leuven ${CPU_BLAS_LIBRARY})
+  set_target_properties(leuven PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})
 endif ()
 
 ### ALSO for the NICER SOLUTION TO HANDLE DEPENDENCIES (see below)
-# target_include_directories(${PROJECTNAME}
+# target_include_directories(leuven
 #    # add CPU-BLAS include directory
 #    PUBLIC ${CPU_BLAS_INCLUDE_DIR}
 #    # add CUDA include directory if any
@@ -355,22 +355,22 @@ message (" ")
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 install (FILES ${CXXHEADERS} DESTINATION includes)
-install (TARGETS ${PROJECTNAME} DESTINATION lib)
+install (TARGETS leuven DESTINATION lib)
 ###
 ### A NICER SOLUTION TO HANDLE DEPENDENCIES: Exporting the target
 ### We will use this in the final project (the CMake/WTFConfig.cmake file must
 ### be change as well in order to be able to used) Also, target_include_directories
 ### must be set to contain the dependency headers!
-# install (TARGETS ${PROJECTNAME} DESTINATION lib EXPORT ${PROJECTNAME}Targets)
-# install (EXPORT ${PROJECTNAME}Targets DESTINATION lib/cmake/${PROJECTNAME})
-# export(PACKAGE ${PROJECTNAME})
+# install (TARGETS leuven DESTINATION lib EXPORT leuvenTargets)
+# install (EXPORT leuvenTargets DESTINATION lib/cmake/leuven)
+# export(PACKAGE leuven)
 
-configure_file (${CMAKE_SOURCE_DIR}/cmake/${PROJECTNAME}Config.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECTNAME}Config.cmake @ONLY)
+configure_file (${CMAKE_SOURCE_DIR}/cmake/leuvenConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/leuvenConfig.cmake @ONLY)
 
 install (FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/cmake/${PROJECTNAME}Config.cmake
-    DESTINATION lib/cmake/${PROJECTNAME}
+    ${CMAKE_CURRENT_BINARY_DIR}/cmake/leuvenConfig.cmake
+    DESTINATION lib/cmake/leuven
 )
 
 

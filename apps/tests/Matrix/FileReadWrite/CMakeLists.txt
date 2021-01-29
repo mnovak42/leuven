@@ -4,25 +4,28 @@
 cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
 project(test-matrixRW)
 
-#-------------------------------------------------------------------------------
-# Define LIBNAME as the library name which we are dependent on here
-#
-SET (LIBNAME "Leuven")
-
 
 #-------------------------------------------------------------------------------
 # Find the library
 #
-find_package (${LIBNAME} CONFIG REQUIRED)
-if (NOT ${LIBNAME}_FOUND)
-  message (FATAL_ERROR "${LIBNAME} was not found")
+find_package (leuven CONFIG REQUIRED)
+if (NOT leuven_FOUND)
+  message (FATAL_ERROR "leuven was not found")
 endif ()
+
+
+#-------------------------------------------------------------------------------
+# Find available thread libraries and prefer pthreads
+#
+set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set (THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package (Threads REQUIRED)
 
 
 #-------------------------------------------------------------------------------
 # Set the CXX flags that were used when building the library
 #
-set (CMAKE_CXX_FLAGS "${${LIBNAME}_CMAKE_CXX_FLAGS}")
+set (CMAKE_CXX_FLAGS "${leuven_CMAKE_CXX_FLAGS}")
 
 
 #-------------------------------------------------------------------------------
@@ -46,16 +49,16 @@ endif (USE_CUBLAS AND ON_GPU)
 # Locate sources and headers for this project
 #
 include_directories (${PROJECT_SOURCE_DIR}/include
-                     ${${LIBNAME}_INCLUDE_DIR})
+                     ${leuven_INCLUDE_DIR})
 file (GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file (GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 
 
 #-------------------------------------------------------------------------------
-# Add the executable, and link it to the ${LIBNAME} libraries
+# Add the executable, and link it to the leuven libraries
 #
 add_executable (test_RWMatrix test_RWMatrix.cc ${sources} ${headers})
-target_link_libraries (test_RWMatrix ${${LIBNAME}_LIBRARIES})
+target_link_libraries (test_RWMatrix ${leuven_LIBRARIES} Threads::Threads)
 
 
 #-------------------------------------------------------------------------------

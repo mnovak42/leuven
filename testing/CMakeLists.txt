@@ -2,7 +2,9 @@
 ## Testing of the leuven library and framework
 ################################################################################
 
-cmake_policy( SET CMP0104 OLD )
+if (${CMAKE_VERSION} VERSION_GREATER "3.17.0")
+  cmake_policy( SET CMP0104 OLD )
+endif ()
 
 ## ----------------------------------------------------------------------------
 ## Retrieve configuration i.e. dependencies locations set at the end of 'utils'
@@ -30,6 +32,14 @@ endif()
 
 
 ## ----------------------------------------------------------------------------
+## Find available thread libraries and prefer pthreads
+##
+set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set (THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package (Threads REQUIRED)
+
+
+## ----------------------------------------------------------------------------
 ## Add some unit tests for CPU/CUDA BLAS/LAPACK interface testing
 ## ----------------------------------------------------------------------------
 
@@ -49,13 +59,13 @@ foreach (tname ${UNIT_TESTS})
     set_property(TARGET test_${tname} PROPERTY LINKER_LANGUAGE Fortran)
   endif ()
   if (USE_CUBLAS)
-    target_link_libraries (test_${tname} ${PROJECTNAME};${CUDA_LIBRARIES})
-#    target_link_libraries (test_${tname} PRIVATE ${PROJECTNAME} CUDA_LIBS)
+    target_link_libraries (test_${tname} leuven;${CUDA_LIBRARIES} Threads::Threads)
+#    target_link_libraries (test_${tname} PRIVATE leuven CUDA_LIBS)
     if ( NOT (${tname} STREQUAL "xorgqr") )
       target_compile_options (test_${tname} PUBLIC "-DON_GPU=ON")
     endif ()
   else ()
-    target_link_libraries (test_${tname} ${PROJECTNAME})
+    target_link_libraries (test_${tname} leuven Threads::Threads)
   endif ()
 endforeach ()
 
@@ -71,7 +81,7 @@ if (USE_CUBLAS)
     set_property(TARGET test_xgeqrf_v2 PROPERTY LINKER_LANGUAGE Fortran)
   endif ()
 #  if (USE_CUBLAS)
-    target_link_libraries (test_xgeqrf_v2 ${PROJECTNAME} ${CUDA_LIBRARIES})
+    target_link_libraries (test_xgeqrf_v2 leuven ${CUDA_LIBRARIES} Threads::Threads)
     target_compile_options (test_xgeqrf_v2 PUBLIC "-DON_GPU=ON")
 
     set_property(TARGET test_xgeqrf_v2 PROPERTY CUDA_SEPARABLE_COMPILATION ON)
@@ -87,7 +97,7 @@ if (USE_CUBLAS)
     set_property(TARGET test_xorgqr_gpu PROPERTY LINKER_LANGUAGE Fortran)
   endif ()
   #  if (USE_CUBLAS)
-    target_link_libraries (test_xorgqr_gpu ${PROJECTNAME} ${CUDA_LIBRARIES})
+    target_link_libraries (test_xorgqr_gpu leuven ${CUDA_LIBRARIES} Threads::Threads)
     target_compile_options (test_xorgqr_gpu PUBLIC "-DON_GPU=ON")
 
     set_property(TARGET test_xorgqr_gpu PROPERTY CUDA_SEPARABLE_COMPILATION ON)
