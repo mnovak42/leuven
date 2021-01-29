@@ -103,7 +103,7 @@ int main() {
   theBlas.Calloc(A);           //symmetric => only lower triangular will be filled
   theBlas.Malloc(EigenVals);
   theBlas.Malloc(EigenVects);
-#if defined(USE_CUBLAS) && defined(ON_GPU)  
+#if defined(USE_CUBLAS) && defined(ON_GPU) && CONFIG_VERBOSE
   #pragma message("-------- USING cuBLAS ----")
   // allocate memory on the DEVICE
   theBlas_gpu.Malloc(A_d);

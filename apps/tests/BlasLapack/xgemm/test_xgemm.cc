@@ -54,8 +54,8 @@ int main() {
   theBlas.Malloc(A);
   theBlas.Malloc(B);
   theBlas.Calloc(C);
-#if defined(USE_CUBLAS) && defined(ON_GPU)  
-#pragma message("-------- USING cuBLAS ----")
+#if defined(USE_CUBLAS) && defined(ON_GPU) && CONFIG_VERBOSE
+  #pragma message("-------- USING cuBLAS ----")
   // allocate memory on the DEVICE
   theBlas_gpu.Malloc(A_d);
   theBlas_gpu.Malloc(B_d);

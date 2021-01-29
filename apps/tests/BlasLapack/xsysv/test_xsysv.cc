@@ -84,7 +84,7 @@ int main() {
   // squared matrix A)
   theBlas.Calloc(A);
   theBlas.Malloc(B);
-#if defined(USE_CUBLAS) && defined(ON_GPU)  
+#if defined(USE_CUBLAS) && defined(ON_GPU) && CONFIG_VERBOSE
   #pragma message("-------- USING cuBLAS ----")
   // allocate memory on the DEVICE
   theBlas_gpu.Malloc(A_d);

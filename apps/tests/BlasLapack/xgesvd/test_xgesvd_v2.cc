@@ -91,8 +91,8 @@ int main() {
   // allocate memory on the HOST
   theBlas.Malloc(A);
   theBlas.Calloc(SIGMA);
-  #if defined(USE_CUBLAS) && defined(ON_GPU)  
-  #pragma message("-------- USING cuBLAS ----")
+  #if defined(USE_CUBLAS) && defined(ON_GPU) && CONFIG_VERBOSE
+    #pragma message("-------- USING cuBLAS ----")
   // allocate memory on the DEVICE
   theBlas_gpu.Malloc(A_d);
   theBlas_gpu.Calloc(SIGMA_d);

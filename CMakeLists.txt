@@ -75,6 +75,14 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 
 ## ----------------------------------------------------------------------------
+## Check if verbose configuration (regarding BLAS, ect. options) was required
+##
+option (CONFIG_VERBOSE "Build the applications with verbose BLAS, LAPACK related configurations." OFF)
+if (CONFIG_VERBOSE)
+  add_definitions (-DCONFIG_VERBOSE)
+endif (CONFIG_VERBOSE)
+
+## ----------------------------------------------------------------------------
 ## The user needs to chose a CPU BLAS implementation available on their system.
 ## Optionally, the user can also add the GPU (CUDA) implementation of the BLAS
 ## library (on top of the CPU one). These will be done in the 'utils'.
@@ -104,4 +112,4 @@ if (BUILD_TESTS)
   message (STATUS "${Green}===== Add testing ===== ${ColourReset}")
   enable_testing ()
   add_subdirectory (testing)
-endif ()
+endif (BUILD_TESTS)
