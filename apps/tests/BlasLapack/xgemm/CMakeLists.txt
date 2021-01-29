@@ -2,7 +2,7 @@
 # Set cmake minimum version
 #
 cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
-
+project(test-xgemm)
 
 #-------------------------------------------------------------------------------
 # Define LIBNAME as the library name which we are dependent on here 

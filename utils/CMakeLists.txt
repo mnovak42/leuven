@@ -246,6 +246,7 @@ message (STATUS " ")
 unset(FORTRAN_COMPILER_REQUIRED CACHE)
 if (NOT USE_MKL_BLAS)
   set (FORTRAN_COMPILER_REQUIRED true)
+  enable_language(Fortran)
 endif (NOT USE_MKL_BLAS)
 ##message (STATUS "====> FORTAN ? = ${FORTRAN_COMPILER_REQUIRED}")
 
@@ -393,3 +394,6 @@ set_property(GLOBAL PROPERTY CUDA_NVCC_FLAGS_leuven_PROP "${CUDA_NVCC_FLAGS}")
 
 # all (i.e. the leuven, CPU and CUDA BLAS/LAPACK) include directories
 set_property(GLOBAL PROPERTY leuven_INCLUDE_DIR_PROP  "${leuven_INCLUDE_DIR};${CPU_BLAS_INCLUDE_DIR};${CUDA_INCLUDE_DIRS}")
+
+# Fortran required
+set_property(GLOBAL PROPERTY leuven_FORTRAN_REQUIRED_PROP  "${FORTRAN_COMPILER_REQUIRED}")

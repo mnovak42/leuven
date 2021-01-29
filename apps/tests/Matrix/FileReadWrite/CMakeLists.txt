@@ -2,16 +2,16 @@
 # Set cmake minimum version
 #
 cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
-
+project(test-matrixRW)
 
 #-------------------------------------------------------------------------------
-# Define LIBNAME as the library name which we are dependent on here 
+# Define LIBNAME as the library name which we are dependent on here
 #
 SET (LIBNAME "Leuven")
 
 
 #-------------------------------------------------------------------------------
-# Find the library 
+# Find the library
 #
 find_package (${LIBNAME} CONFIG REQUIRED)
 if (NOT ${LIBNAME}_FOUND)
@@ -45,7 +45,7 @@ endif (USE_CUBLAS AND ON_GPU)
 #-------------------------------------------------------------------------------
 # Locate sources and headers for this project
 #
-include_directories (${PROJECT_SOURCE_DIR}/include 
+include_directories (${PROJECT_SOURCE_DIR}/include
                      ${${LIBNAME}_INCLUDE_DIR})
 file (GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cc)
 file (GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
@@ -64,4 +64,3 @@ target_link_libraries (test_RWMatrix ${${LIBNAME}_LIBRARIES})
 if (FORTRAN_COMPILER_REQUIRED)
   set_property(TARGET test_RWMatrix PROPERTY LINKER_LANGUAGE Fortran)
 endif (FORTRAN_COMPILER_REQUIRED)
-

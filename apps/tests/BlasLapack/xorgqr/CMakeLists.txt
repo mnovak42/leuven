@@ -2,16 +2,16 @@
 # Set cmake minimum version
 #
 cmake_minimum_required (VERSION 3.1.0 FATAL_ERROR)
-
+project(test-xorgqr)
 
 #-------------------------------------------------------------------------------
-# Define LIBNAME as the library name which we are dependent on here 
+# Define LIBNAME as the library name which we are dependent on here
 #
 set (LIBNAME "leuven")
 
 
 #-------------------------------------------------------------------------------
-# Find the library 
+# Find the library
 #
 find_package (${LIBNAME} CONFIG REQUIRED)
 if (NOT ${LIBNAME}_FOUND)
@@ -49,7 +49,7 @@ endif (USE_CUBLAS AND ON_GPU)
 #-------------------------------------------------------------------------------
 # Locate sources and headers for this project
 #
-include_directories (${PROJECT_SOURCE_DIR}/include 
+include_directories (${PROJECT_SOURCE_DIR}/include
                      ${${LIBNAME}_INCLUDE_DIR})
 file (GLOB headers ${PROJECT_SOURCE_DIR}/*.h)
 
