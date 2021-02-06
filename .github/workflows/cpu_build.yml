@@ -103,11 +103,11 @@ jobs:
             echo "CXX=/usr/local/bin/g++-${{ matrix.version }}" >> $GITHUB_ENV
             echo "FC=/usr/local/bin/gfortran-${{ matrix.version }}" >> $GITHUB_ENV
           else
-            brew install gcc
+            brew install gcc@10
             sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
             echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
-            echo "FC=/usr/local/bin/gfortran" >> $GITHUB_ENV
+            echo "FC=/usr/local/bin/gfortran-10" >> $GITHUB_ENV
           fi
 
       - name: Build & Test Debug
