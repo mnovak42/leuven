@@ -52,7 +52,7 @@ endif (CMAKE_BUILD_TYPE STREQUAL "" AND NOT CMAKE_CXX_FLAGS MATCHES "-O[123]")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -std=c++11")
 #set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -W -Wall -O3 -std=c++11 -march=native -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
 set (CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -W -Wall -O3 -std=c++11 -march=native")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -W -Wall -O0 -std=c++11-g")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -W -Wall -O0 -std=c++11 -g")
 
 if (NOT CMAKE_BUILD_TYPE)
     set (leuven_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
