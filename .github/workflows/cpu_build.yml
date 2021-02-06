@@ -99,12 +99,16 @@ jobs:
 
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             brew install gcc@${{ matrix.version }}
+            brew install gfortran@${{ matrix.version }}
             echo "CC=/usr/local/bin/gcc-${{ matrix.version }}" >> $GITHUB_ENV
             echo "CXX=/usr/local/bin/g++-${{ matrix.version }}" >> $GITHUB_ENV
+            echo "FC=/usr/local/bin/gfortran-${{ matrix.version }}" >> $GITHUB_ENV
           else
+            brew install gfortran
             sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
             echo "CC=clang" >> $GITHUB_ENV
             echo "CXX=clang++" >> $GITHUB_ENV
+            echo "FC=/usr/local/bin/gfortran" >> $GITHUB_ENV
           fi
 
       - name: Build & Test Debug
