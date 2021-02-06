@@ -14,8 +14,7 @@
 #include "KscEncodingAndQM_AMS.hh"
 
 // for input argument parsing
-#include "KscIchol_TrainInputPars.hh"
-#include "cxxopts.hh"
+#include "Ksc_TrainInputPars.hh"
 
 
 
@@ -43,7 +42,7 @@ int main(int argc, char **argv) {
   // -----------------------
   //   Obtain required and optional input argument given to the program by
   //   parsing the input string.
-    KscIchol_TrainInputPars<DTYPE, INP_DTYPE> theInParams;
+    Ksc_TrainInputPars<DTYPE, INP_DTYPE> theInParams;
     if (0 > theInParams.GetOpts(argc, argv)) {
       return EXIT_FAILURE;
     }

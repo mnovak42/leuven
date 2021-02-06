@@ -108,7 +108,7 @@ public:
 
     const std::string description =
 "\n Application that Trains a SPARSE KSC model using a 1D RBF kernel on the given\n\
- Training Data set and applies the trained model, i.e. performs Test (`out-of-\n\n\
+ Training Data set and applies the trained model, i.e. performs Test (`out-of-\n\
  same extension`) to cluster a given Test Data set.\n\n\
  The SPARSITY is achived through the incomplete Cholesky factorisation based (i.\n\
  e. low rank) approximation of the Training Data set Kernel Matrix. This is done\n\
@@ -116,7 +116,7 @@ public:
  the given (related) paraneters.\n\n";
 
     if (fOptions) delete fOptions;
-    fOptions = new cxxopts::Options("SPARSE KSC: Testing i.e. `Out-Of-Sample Extension`", description);
+    fOptions = new cxxopts::Options("SPARSE KSC Testing i.e. `Out-Of-Sample Extension`: ./KscIchol_Test ", description);
 
     // add argument that are related to the incomplete Cholesky factorisation of
     // the training data set

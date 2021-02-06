@@ -120,12 +120,12 @@ const std::string description =
  the 2D grid are written to the output file. The optimal kernel parameter and\n\
  cluster number parameters then can be determined by inspecting these values.\n\n\
  The SPARSITY is achived through the incomplete Cholesky factorisation based (i.\n\
- e. low rank) approximation of the training data set kernel matrix. This is done\n\
+ e. low rank) approximation of the Training Data set Kernel Matrix. This is done\n\
  by the application prior to the above hyper paraneter tuning procedure using\n\
  the given (related) paraneters.\n\n";
 
     if (fOptions) delete fOptions;
-    fOptions = new cxxopts::Options("SPARSE KSC: Hyper Parameter Tuning", description);
+    fOptions = new cxxopts::Options("SPARSE KSC Hyper Parameter Tuning: ./KscIchol_Tune ", description);
 
     // add argument that are related to the incomplete Cholesky factorisation of
     // the training data set

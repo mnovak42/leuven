@@ -97,7 +97,7 @@ public:
  number parameters then can be determined by inspecting these values.\n\n";
 
     if (fOptions) delete fOptions;
-    fOptions = new cxxopts::Options("KSC: Hyper Parameter Tuning", description);
+    fOptions = new cxxopts::Options("KSC Hyper Parameter Tuning: ./Ksc_Tune ", description);
 
     fOptions->add_options("Training data set [REQUIRED]")
      ("trDataNumber"   , "(size_t) Number of training data.",         cxxopts::value<size_t>())
