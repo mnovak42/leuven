@@ -16,8 +16,7 @@
 #include <numeric>
 
 // for input argument parsing
-#include "KscIchol_TuneInputPars.hh"
-#include "cxxopts.hh"
+#include "Ksc_TuneInputPars.hh"
 
 //#define CHI2
 
@@ -53,7 +52,7 @@ int main(int argc, char **argv) {
   // -----------------------
   //   Obtain required and optional input argument given to the program by
   //   parsing the input string.
-    KscIchol_TuneInputPars<DTYPE, INP_DTYPE> theInParams;
+    Ksc_TuneInputPars<DTYPE, INP_DTYPE> theInParams;
     if (0 > theInParams.GetOpts(argc, argv)) {
       return EXIT_FAILURE;
     }
