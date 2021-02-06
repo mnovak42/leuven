@@ -4,20 +4,17 @@
 #include "Matrix.hh"
 
 
-#include "IncCholesky.hh"
 #include "Kernels.hh"
 
 #include "sys/time.h"
 #include "time.h"
 
-#include "KscWkpcaIChol.hh"
+#include "KscWkpca.hh"
 #include "KscEncodingAndQM_BLF.hh"
 #include "KscEncodingAndQM_AMS.hh"
-#include "KscEncodingAndQM_BAS.hh"
 
 // for input argument parsing
-#include "KscIchol_TestInputPars.hh"
-#include "cxxopts.hh"
+#include "Ksc_TestInputPars.hh"
 
 //#define CHI2
 
@@ -31,16 +28,15 @@ typedef double INP_DTYPE;
 //typedef float INP_DTYPE;
 
 //
-// Training the sparse KCS model on a given training data set using the RBF
+// Training the (non-sparse) KCS model on a given training data set using the RBF
 // kernel and apply the trained model to cluster the test data set.
-//  1. Performs the Incomplete Cholesky factorization of the taraining data
-//     kernel martix.
-//  2. Trains a sparese KSC model ontained by using the reduced set method.
-//  3. Clusters the test data set using the sparse KSC model tranined in the
-//     previous step.
+//  1. Trains the KSC model on the training data set by using the given hyper
+//     parameters (RBF kernel parameter and required number of clusters)
+//  2. Clusters the test data set using the KSC model trained in the previous
+//     step.
 //
-//  How to: execute `./KscIchol_Test --help` to see the required/optional
-//          input arguments
+//  How to: execute `./Ksc_Test --help` to see the required/optional input
+//          arguments
 //
 int main(int argc, char **argv) {
   // ===========================================================================
@@ -48,7 +44,7 @@ int main(int argc, char **argv) {
   // -----------------------
   //   Obtain required and optional input argument given to the program by
   //   parsing the input string.
-    KscIchol_TestInputPars<DTYPE, INP_DTYPE> theInParams;
+    Ksc_TestInputPars<DTYPE, INP_DTYPE> theInParams;
     if (0 > theInParams.GetOpts(argc, argv)) {
       return EXIT_FAILURE;
     }
@@ -59,7 +55,7 @@ int main(int argc, char **argv) {
   //   allocate matrix memory, store number and dimension of the training data.
     struct timeval start;   // initial time stamp - for timing
     struct timeval finish;  // final time stamp   - for timing
-    BLAS           theBlas; // only for Matrix memory managmenet here in main
+    BLAS           theBlas; // only for Matrix memory managmenet here in the main
     const bool     theUseGPU      = theInParams.fUseGPU;              // use GPU in training
     const size_t   theNumTrData   = theInParams.fTheTrDataNumber;     // #training data
     const size_t   theDimTrData   = theInParams.fTheTrDataDimension;  // its dimension
@@ -95,119 +91,50 @@ int main(int argc, char **argv) {
 
 
   // ===========================================================================
-  // Icomplete Cholesky decomposition of the training data kernel matrix:
-  // --------------------------------------------------------------------
-  //   RBF kernel function will be used with DTYPE return type (must be the same
-  //   as the computating type i.e. either double or float) and will operate
-  //   on INP_DTYPE values that, in this case, is the same type as the input data.
-  //   The ICD will be done in DTYPE data (double or float) i.e. operates on the
-  //   INP_DTYPE type. (Chi2 kernel can also be used)
-#ifdef CHI2
-  IncCholesky<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE> theIncCholesky;
-#else
-  IncCholesky<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE> theIncCholesky;
-#endif
-    // set the bandwidth paraneter of the RBF kernel (1D)
-    theIncCholesky.SetKernelParameters(theInParams.fTheIcholRBFKernelPar);
-    // set the input data matrix
-    theIncCholesky.SetInputDataMatrix(&theInputTrainingDataM);
-    // the tolerated error, max number of cols. i.e. max rank will be set and the
-    // transpose of the Cholesky matrix i.e. G \in N_tr x R lower triangular will
-    // be required (this is what the later KSC algorithm implementation assumes).
-    if (theInParams.fTheVerbosityLevel > 0) {
-      std::cout << "\n ---- Starts: incomplete Cholesky decomposition of the Kernel matrix." << std::endl;
-    }
-    gettimeofday(&start, NULL);
-    theIncCholesky.Decompose(theInParams.fTheIcholTolError, theInParams.fTheIcholMaxRank, true);
-    gettimeofday(&finish, NULL);
-    double durationICD = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
-    if (theInParams.fTheVerbosityLevel > 0) {
-      std::cout << " ---- Finished: incomplete Cholesky decomposition of the Kernel matrix"    << std::endl;
-      std::cout << "      ---> Duration of ICD  : " << durationICD << " [s]"                   << std::endl;
-      std::cout << "      ---> Final error      : " << theIncCholesky.GetFinalResidual()             << std::endl;
-      std::cout << "      ---> Rank of the aprx : " << theIncCholesky.GetICholMatrix()->GetNumCols() << std::endl;
-      std::cout << "      ---> Dimensions of G  :(" << theIncCholesky.GetICholMatrix()->GetNumRows()
-                                                    << " x "
-                                                    << theIncCholesky.GetICholMatrix()->GetNumCols()
-                                                    << ")" << std::endl;
-    }
-  // ===========================================================================
-
-
-  // ===========================================================================
-  // Permutations of the training data:
-  // ----------------------------------
-  //   Perform the permutations on the training data (applied during the incomplete
-  //   Cholesky decomposition of the corresponding kernel matrix)
-    Matrix<INP_DTYPE, false> thePermInputTrainingDataM(theNumTrData, theDimTrData);
-    theBlas.Malloc(thePermInputTrainingDataM);
-    Matrix<int> thePermutationVector(theNumTrData, 1);
-    theBlas.Malloc(thePermutationVector);
-    const std::vector<size_t>& thePermVet = theIncCholesky.GetPermutationVector();
-    for (size_t ir=0; ir<theNumTrData; ++ir) {
-      const size_t ii = thePermVet[ir];
-      for (size_t id=0; id<theDimTrData; ++id) {
-        thePermInputTrainingDataM.SetElem(ir, id, theInputTrainingDataM.GetElem(ii, id));
-      }
-      thePermutationVector.SetElem(ir, 0, thePermVet[ir]);
-    }
-    // the memory allocated for the original input data matrix can be freed
-    theBlas.Free(theInputTrainingDataM);
-  // ===========================================================================
-
-
-  // ===========================================================================
   // Training the KSC model:
   // ----------------------
-  //   Training the KSC model using the setting (number of desired clusters,
+  //   Training the KSC model using the setting (desired number of clusters,
   //   cluster membership encoding, kernel parameter, etc.) given by the input
-  //   arguments.(Chi2 kernel can also be used)
+  //   arguments. An RBF kernel is used (the Chi2 kernel can also be used here).
   #ifdef CHI2
-    KscWkpcaIChol<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKscWkpcaIchol;
+    KscWkpca<KernelChi2 <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKsc;
   #else
-    KscWkpcaIChol<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKscWkpcaIchol;
+    KscWkpca<KernelRBF <DTYPE, INP_DTYPE>, DTYPE, INP_DTYPE > theKsc;
   #endif
     // Set all required members:
-    // 1. the 1D RBF kernel paraneter (i.e. bandwidth)
-    theKscWkpcaIchol.SetKernelParameters(theInParams.fTheClusterRBFKernelPar);
+    // 1. the RBF kernel paraneter (i.e. bandwidth)
+    theKsc.SetKernelParameters(theInParams.fTheClusterRBFKernelPar);
     // 2. the input data matrix (which permutations have already been applied on)
-    theKscWkpcaIchol.SetInputTrainingDataMatrix(&thePermInputTrainingDataM);
-    // 3. the pointer to the incomplete Choleksy factor matrix of the training
-    // kernel matrix (this matrix will be destroyed and the memory will be freed
-    // so set the original pointer to be nullptr)
-    theKscWkpcaIchol.SetIncCholeskyMatrix(theIncCholesky.GetICholMatrix());
-    theIncCholesky.SetNullICholMatrixPrt();
-    // 4. number of desired clusters
-    theKscWkpcaIchol.SetNumberOfClustersToFind(theInParams.fTheClusterNumber);
+    theKsc.SetInputTrainingDataMatrix(&theInputTrainingDataM);
+    // 4. desired number of clusters
+    theKsc.SetNumberOfClustersToFind(theInParams.fTheClusterNumber);
     // 5. the cluster membership encoding scheme and model evaluation
     switch (theInParams.fTheClusterEncodingScheme) {
-      case 0: theKscWkpcaIchol.SetEncodingAndQualityMeasureType(KscQMType::kBLF);
+      case 0: theKsc.SetEncodingAndQualityMeasureType(KscQMType::kBLF);
               break;
-      case 1: theKscWkpcaIchol.SetEncodingAndQualityMeasureType(KscQMType::kAMS);
+      case 1: theKsc.SetEncodingAndQualityMeasureType(KscQMType::kAMS);
               break;
-      case 2: theKscWkpcaIchol.SetEncodingAndQualityMeasureType(KscQMType::kBAS);
-              break;
+      default: theKsc.SetEncodingAndQualityMeasureType(KscQMType::kAMS);
     }
     // the weight to be given to the balance term in the model evaluation
-    theKscWkpcaIchol.SetQualityMeasureEtaBalance(theInParams.fTheClusterEvalWBalance);
+    theKsc.SetQualityMeasureEtaBalance(theInParams.fTheClusterEvalWBalance);
     // the cardinality threshold below which clusters are considered to be
     // outliers and contibute with zero to the clustering quality measure
-    theKscWkpcaIchol.SetQualityMeasureOutlierThreshold(theInParams.fTheClusterEvalOutlierThreshold);
+    theKsc.SetQualityMeasureOutlierThreshold(theInParams.fTheClusterEvalOutlierThreshold);
     // set request to use GPU during the training phase
-    theKscWkpcaIchol.SetUseGPU(theUseGPU);
+    theKsc.SetUseGPU(theUseGPU);
     if (theInParams.fTheVerbosityLevel > 0) {
       std::cout << "\n ---- Starts: training the KSC model." << std::endl;
     }
     gettimeofday(&start, NULL);
-    theKscWkpcaIchol.Train(theInParams.fTheNumBLASThreads, true, theInParams.fTheClusterLevel, theInParams.fTheVerbosityLevel);
+    theKsc.Train(theInParams.fTheNumBLASThreads, true, theInParams.fTheClusterLevel, theInParams.fTheVerbosityLevel);
     gettimeofday(&finish, NULL);
     double durationTr = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
-
 
     if (theInParams.fTheVerbosityLevel > 0) {
       std::cout << " ---- Finished: training the KSC model"                   << std::endl;
       std::cout << "      ---> Duration         : " << durationTr << " [s]"   << std::endl;
-      const KscEncodingAndQM<DTYPE>* theEncoding =  theKscWkpcaIchol.GetEncodingAndQualityMeasure();
+      const KscEncodingAndQM<DTYPE>* theEncoding =  theKsc.GetEncodingAndQualityMeasure();
       std::cout << "      ---> The encoding(QM) : " << theEncoding->GetName() << std::endl;
       std::cout << "      --->   Quality value  : " << theEncoding->GetTheQualityMeasureValue() << std::endl;
       std::cout << "      --->   Eta balance    : " << theEncoding->GetCoefEtaBalance()         << std::endl;
@@ -239,24 +166,24 @@ int main(int argc, char **argv) {
 
 
   // ===========================================================================
-  // Perform the testing i.e. cluster assigment of the test data:
-  // ------------------------------------------------------------
+  // Testing (out-of-sample extension) i.e. cluster assigment of the test data:
+  // ---------------------------------------------------------------------------
     if (theInParams.fTheVerbosityLevel > 0) {
       std::cout << "\n ---- Starts: clustering the test data with the KSC model." << std::endl;
     }
     //
     gettimeofday(&start, NULL);
-    theKscWkpcaIchol.Test(theInputTestDataM, theInParams.fTheNumBLASThreads, theInParams.fTheClusterLevel, theInParams.fTheVerbosityLevel);
+    theKsc.Test(theInputTestDataM, theInParams.fTheNumBLASThreads, theInParams.fTheClusterLevel, theInParams.fTheVerbosityLevel);
     gettimeofday(&finish, NULL);
     durationTr = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
     // write results into file
-    const Matrix<DTYPE, false>* theClusterResM = theKscWkpcaIchol.GetTheClusterMembershipMatrix();
+    const Matrix<DTYPE, false>* theClusterResM = theKsc.GetTheClusterMembershipMatrix();
     theClusterResM->WriteToFile(theInParams.fTheClusterResFile);
     // print out information
     if (theInParams.fTheVerbosityLevel > 0) {
       std::cout << " ---- Finished: test data cluster assignment"             << std::endl;
       std::cout << "      ---> Duration         : " << durationTr << " [s]"   << std::endl;
-      const KscEncodingAndQM<DTYPE>* theEncoding =  theKscWkpcaIchol.GetEncodingAndQualityMeasure();
+      const KscEncodingAndQM<DTYPE>* theEncoding =  theKsc.GetEncodingAndQualityMeasure();
       std::cout << "      ---> The encoding(QM) : " << theEncoding->GetName() << std::endl;
       std::cout << "      --->   Quality value  : " << theEncoding->GetTheQualityMeasureValue() << std::endl;
       std::cout << "      --->   Eta balance    : " << theEncoding->GetCoefEtaBalance()         << std::endl;
@@ -266,30 +193,9 @@ int main(int argc, char **argv) {
     }
   // ===========================================================================
 
-
-  // write the reduced set data and/or the permutation vector into file(s) if required
-  if (!theInParams.fTheIcholRedSetFile.empty()) {
-    theKscWkpcaIchol.GetTheReducedSetDataM()->WriteToFile(theInParams.fTheIcholRedSetFile);
-  }
-  if (!theInParams.fTheIcholPermVectFile.empty()) {
-    thePermutationVector.WriteToFile(theInParams.fTheIcholPermVectFile);
-  }
-  if (theInParams.fTheVerbosityLevel > 0 && (!theInParams.fTheIcholRedSetFile.empty() || !theInParams.fTheIcholPermVectFile.empty())) {
-    std::cout << " ---- Additional data written to file : " << std::endl;
-    if (!theInParams.fTheIcholRedSetFile.empty()) {
-      std::cout << "      ---> Reduced set data : " << theInParams.fTheIcholRedSetFile << std::endl;
-    }
-    if (!theInParams.fTheIcholPermVectFile.empty()) {
-      std::cout << "      ---> Permutation vect.: " << theInParams.fTheIcholPermVectFile << std::endl;
-    }
-    std::cout << std::endl;
-  }
-
-
   // free allocated memory
-  theBlas.Free(thePermInputTrainingDataM);
+  theBlas.Free(theInputTrainingDataM);
   theBlas.Free(theInputTestDataM);
-  theBlas.Free(thePermutationVector);
 
   return EXIT_SUCCESS;
 }

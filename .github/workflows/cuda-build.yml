@@ -1,31 +1,31 @@
-# builds only since tehere is no device 
+# builds only since tehere is no device
 name: CUDA-ubuntu-build
 
 on:
   push:
-    paths-ignore: 
+    paths-ignore:
       - 'README.md'
-      - '.github/**' 
-      - 'docs/**' 
+      - '.github/**'
+      - 'docs/**'
       - 'apps/examples/KSC/docs/**'
       - '*.yml'
     branches:
       - master
   pull_request:
-    paths-ignore: 
+    paths-ignore:
       - 'README.md'
       - '.github/**'
-      - 'docs/**' 
-      - 'apps/examples/KSC/docs/**'    
-      - '*.yml' 
-    branches: 
+      - 'docs/**'
+      - 'apps/examples/KSC/docs/**'
+      - '*.yml'
+    branches:
       - master
 
 
 jobs:
   build:
     # the build will run on each elements of the `matrix`
-    # each element of the `matrix` contains os, cuda and compiler version 
+    # each element of the `matrix` contains os, cuda and compiler version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -36,7 +36,7 @@ jobs:
           - os: ubuntu-18.04
             cuda: "11.0"
             gcc: 8
-            
+
           - os: ubuntu-18.04
             cuda: "10.2"
             gcc: 8
@@ -66,14 +66,14 @@ jobs:
     # setting the `build` directory name and `build type` of the environment
     env:
       build_dir: "build" # here we might change ot "${{runner.workspace}}/build"
-    
+
     # checkout a copy of the repository to the runner
     steps:
     - uses: actions/checkout@v2
 
-    # install cuda (the version according to the current matrix element), set 
-    # the corresponding `cuda` environment variable and export environment 
-    # variables (CUDA PATH and LIBS that allows CMake to find all CUDA related 
+    # install cuda (the version according to the current matrix element), set
+    # the corresponding `cuda` environment variable and export environment
+    # variables (CUDA PATH and LIBS that allows CMake to find all CUDA related
     # variables by using its built in FindCUDA modul)
     - name: Install CUDA
       env:
@@ -83,29 +83,29 @@ jobs:
         if [[ $? -eq 0 ]]; then
           # Set paths for subsequent steps, using ${CUDA_PATH}
           echo "Adding CUDA to CUDA_PATH, PATH and LD_LIBRARY_PATH"
-          echo "::set-env name=CUDA_PATH::${CUDA_PATH}"
-          echo "::add-path::${CUDA_PATH}/bin"
-          echo "::set-env name=LD_LIBRARY_PATH::${CUDA_PATH}/lib:${LD_LIBRARY_PATH}"
+          echo "CUDA_PATH=${CUDA_PATH}" >> $GITHUB_ENV
+          echo "${CUDA_PATH}/bin" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${CUDA_PATH}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
         fi
       shell: bash
 
     # install/select gcc/g++ (the version according to the current matrix element)
-    # and export environment variables (CC, CXX compilers that CMake will use to 
+    # and export environment variables (CC, CXX compilers that CMake will use to
     # set CMAKE_C_COMPILER and CMAKE_CXX_COMPILER compiler executables)
-    - name: Install/Select gcc and g++ 
+    - name: Install/Select gcc and g++
       run: |
         sudo apt-get install -y gcc-${{ matrix.gcc }} g++-${{ matrix.gcc }}
-        echo "::set-env name=CC::/usr/bin/gcc-${{ matrix.gcc }}"
-        echo "::set-env name=CXX::/usr/bin/g++-${{ matrix.gcc }}"
-        echo "::set-env name=CUDAHOSTCXX::/usr/bin/g++-${{ matrix.gcc }}"
+        echo "CC=/usr/bin/gcc-${{ matrix.gcc }}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/g++-${{ matrix.gcc }}" >> $GITHUB_ENV
+        echo "CUDAHOSTCXX=/usr/bin/g++-${{ matrix.gcc }}" >> $GITHUB_ENV
 
-    # setting up/creating the CMake build directly and set the build type (also 
+    # setting up/creating the CMake build directly and set the build type (also
     # the '.' referes to the source directory)
     # add the additional 'leuven' CMake configurations for CUDA build and enabling
-    # testing as -DUSE_CUBLAS=ON -DBUILD_TESTS=ON 
+    # testing as -DUSE_CUBLAS=ON -DBUILD_TESTS=ON
     - name: Configure cmake (Debug)
       id: configure
-      run: cmake . -B ${{ env.build_dir }} -DCMAKE_BUILD_TYPE=Debug -DUSE_CUBLAS=ON -DBUILD_TESTS=ON 
+      run: cmake . -B ${{ env.build_dir }} -DCMAKE_BUILD_TYPE=Debug -DUSE_CUBLAS=ON -DBUILD_TESTS=ON
 
     # show content of CMakeFiles/CMakeOutput.log and )CMakeFiles/CMakeError.log
     # in case of CMake configuration error
@@ -124,10 +124,7 @@ jobs:
             echo "----"
           fi
 
-    # build with all the above configuartion by enabling to use CUDA  
+    # build with all the above configuartion by enabling to use CUDA
     - name: Build (Debug)
       working-directory: ${{ env.build_dir }}
       run: cmake --build . --target all --verbose -j `nproc`
-
-
- 

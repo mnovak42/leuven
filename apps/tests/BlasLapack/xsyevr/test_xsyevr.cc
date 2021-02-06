@@ -63,8 +63,9 @@ DTYPE INPM_A [][N] = {
 int main() {
   //
   // The matrix has 5 eigenvalue eigenvector pairs. The eigenpairs, corresponding 
-  // to the eigenvalue indices of 1,2,3 (ASCENDING: so the top indices are 4,3,2,
-  // 1) will be requested and stored in the first NEIGEN elements of the 
+  // to the eigenvalue indices of 1,2,3 (ASCENDING: so the leading order is 5,4,3,2,1,
+  // and so the above 1,2,3 will be the last 3 eigne) will be requested and stored 
+  // in the first NEIGEN elements of the 
   // EigenVals vector (first col/row of matrix) and the corresponding eigenvectors 
   // will be in the first NEIGEN cols of the EigenVects matrix.
   const int    whichEigen  =   2;  // given by indices below
@@ -102,7 +103,7 @@ int main() {
   theBlas.Calloc(A);           //symmetric => only lower triangular will be filled
   theBlas.Malloc(EigenVals);
   theBlas.Malloc(EigenVects);
-#if defined(USE_CUBLAS) && defined(ON_GPU)  
+#if defined(USE_CUBLAS) && defined(ON_GPU) && CONFIG_VERBOSE
   #pragma message("-------- USING cuBLAS ----")
   // allocate memory on the DEVICE
   theBlas_gpu.Malloc(A_d);

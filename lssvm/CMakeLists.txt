@@ -8,14 +8,14 @@ message (STATUS "${Green}===== Adding the lssvm part ===== ${ColourReset}")
 ################################################################################
 # Add some project sources headers and set include directories
 #
-file (GLOB CXXHEADERS 
-  ${CMAKE_SOURCE_DIR}/lssvm/utils/inc/*.hh 
+file (GLOB CXXHEADERS
+  ${CMAKE_SOURCE_DIR}/lssvm/utils/inc/*.hh
   ${CMAKE_SOURCE_DIR}/lssvm/utils/inc/*.tpp
-  ${CMAKE_SOURCE_DIR}/lssvm/ksc/inc/*.hh 
-  ${CMAKE_SOURCE_DIR}/lssvm/ksc/inc/*.tpp 
+  ${CMAKE_SOURCE_DIR}/lssvm/ksc/inc/*.hh
+  ${CMAKE_SOURCE_DIR}/lssvm/ksc/inc/*.tpp
 )
 
-file (GLOB CXXSOURCES 
+file (GLOB CXXSOURCES
   ${CMAKE_SOURCE_DIR}/lssvm/utils/src/*.cc
   ${CMAKE_SOURCE_DIR}/lssvm/ksc/src/*.cc
 )
@@ -32,19 +32,7 @@ message ("")
 
 
 ################################################################################
-# Add target library and links
-#
-# NOTE: PURE C++ i.e. no CUDA. I will change thispart according to leuven-lib
-#       when I will have CUDA sources here
-#
-#add_library(ksc STATIC ${CXXSOURCES})
-#target_link_libraries(ksc ${PROJECTNAME} ${CPU_BLAS_LIBRARY}) 
-
-
-
-################################################################################
-# Install: headers, library 
+# Install: headers, library
 #
 install (FILES ${CXXHEADERS} DESTINATION includes)
 #install (TARGETS ksc DESTINATION lib)
-

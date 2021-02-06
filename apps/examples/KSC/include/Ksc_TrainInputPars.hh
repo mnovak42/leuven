@@ -1,6 +1,6 @@
 
-#ifndef KSCICHOL_TRAININPUTPARS_HH
-#define KSCICHOL_TRAININPUTPARS_HH
+#ifndef KSC_TRAININPUTPARS_HH
+#define KSC_TRAININPUTPARS_HH
 
 #include "cxxopts.hh"
 
@@ -8,13 +8,13 @@
 #include <string>
 
 template <typename DTYPE, typename INP_DTYPE>
-class KscIchol_TrainInputPars {
+class Ksc_TrainInputPars {
 public:
 
-  KscIchol_TrainInputPars() : fOptions(nullptr) {
+  Ksc_TrainInputPars() : fOptions(nullptr) {
     DefOpts();
   }
- ~KscIchol_TrainInputPars() {
+ ~Ksc_TrainInputPars() {
    if (fOptions) delete fOptions;
   }
 
@@ -22,14 +22,6 @@ public:
   //
   cxxopts::Options*      fOptions;
   //
-  // --- incomplete Cholesky (required)
-  DTYPE                  fTheIcholTolError;
-  size_t                 fTheIcholMaxRank;
-  std::vector<INP_DTYPE> fTheIcholRBFKernelPar;
-  // --- incomplete Cholesky (optional)
-  std::string            fTheIcholRedSetFile;
-  std::string            fTheIcholPermVectFile;
-
   // --- training data set input
   size_t                 fTheTrDataNumber;
   size_t                 fTheTrDataDimension;
@@ -49,34 +41,9 @@ public:
   size_t                 fTheNumBLASThreads;
   bool                   fUseGPU;
 
-  friend std::ostream& operator<<(std::ostream& os, const KscIchol_TrainInputPars& p) {
+  friend std::ostream& operator<<(std::ostream& os, const Ksc_TrainInputPars& p) {
      os << "\n ===============================================================\n"
-        << "\n SPARSE KSC: Training (with defaults for optionals):\n\n"
-        << "  ------ Cholesky decomposition related: \n"
-        << "  icholTolError              = " << p.fTheIcholTolError        << "\n"
-        << "  icholMaxRank               = " << p.fTheIcholMaxRank         << "\n"
-        //<< "  icholRBFKernelPar          = " << p.fTheIcholRBFKernelPar    << "\n\n"
-        << "  icholRBFKernelPar          = ";
-        size_t nIcholPars = p.fTheIcholRBFKernelPar.size();
-        if (nIcholPars == 1) {
-           os << p.fTheIcholRBFKernelPar[0] << "\n";
-        } else if (nIcholPars == 2) {
-           os << "{" << p.fTheIcholRBFKernelPar[0] << ", " << p.fTheIcholRBFKernelPar[1]
-              << "}  --> " << nIcholPars << " number of parameters. \n";
-        } else if (nIcholPars == 3) {
-           os << "{" << p.fTheIcholRBFKernelPar[0] << ", " << p.fTheIcholRBFKernelPar[1]
-              << ", "<< p.fTheIcholRBFKernelPar[2]
-              << "}  --> " << nIcholPars << " number of parameters. \n";
-        } else {
-           os << "{" << p.fTheIcholRBFKernelPar[0] << ", " << p.fTheIcholRBFKernelPar[1]
-              << ", ..., " << p.fTheIcholRBFKernelPar[nIcholPars-1]
-              << "}  --> " << nIcholPars << " number of parameters. \n";
-        }
-        if (!p.fTheIcholRedSetFile.empty())
-          os << "  icholRedSetFile            = " << p.fTheIcholRedSetFile     << "\n";
-        if (!p.fTheIcholPermVectFile.empty())
-          os << "  icholPermVectFile          = " << p.fTheIcholPermVectFile   << "\n";
-     os << "\n"
+        << "\n KSC: Training (with defaults for optionals):\n\n"
         << "  ------ Training data set related: \n"
         << "  trDataNumber               = " << p.fTheTrDataNumber         << "\n"
         << "  trDataDimension            = " << p.fTheTrDataDimension      << "\n"
@@ -103,28 +70,11 @@ public:
   void DefOpts() {
 
     const std::string description =
-"\n Application that Trains a SPARSE KSC model using a 1D RBF kernel on the\n\
- given Training Data set.\n\n\
- The SPARSITY is achived through the incomplete Cholesky factorisation based (i.\n\
- e. low rank) approximation of the Training Data set Kernel Matrix. This is done\n\
- by the application prior to the above hyper paraneter tuning procedure using\n\
- the given (related) paraneters.\n\n";
+"\n Application that Trains a KSC model using a 1D RBF kernel on the\n\
+ given Training Data set by using the provided parameters.\n\n";
 
     if (fOptions) delete fOptions;
-    fOptions = new cxxopts::Options("KSC Training Application: ./KscIchol_Train ", description);
-
-    // add argument that are related to the incomplete Cholesky factorisation of
-    // the training data set
-    fOptions->add_options("Cholesky decomposition [REQUIRED]")
-     ("icholTolError"     , "(double)    Tolerated approximate error in the inc. Cholesky decomposition.",     cxxopts::value<double>())
-     ("icholMaxRank"      , "(size_t)    Maximum number of data to select in the inc. Cholesky decomposition.", cxxopts::value<size_t>())
-     ("icholRBFKernelPar" , "(INP_DTYPE) RBF kernel parameter to be used in the inc. Cholesky decomposition (scalar or vector).",  cxxopts::value< std::vector<INP_DTYPE> >())
-    ;
-
-    fOptions->add_options("Cholesky decomposition [OPTIONAL]")
-     ("icholRedSetFile"    , "(string) The reduced set data is written into this file (if given).",                   cxxopts::value<std::string>()->default_value(""))
-     ("icholPermVectFile"  , "(string) The permutations (done during the ICD) is written into this file (if given).", cxxopts::value<std::string>()->default_value(""))
-    ;
+    fOptions = new cxxopts::Options("KSC Training: ./Ksc_Train ", description);
 
     fOptions->add_options("Training data set [REQUIRED]")
      ("trDataNumber"   , "(size_t) Number of training data.",         cxxopts::value<size_t>())
@@ -151,7 +101,7 @@ public:
      ("useGPU"        , "(bool)   Use GPU in the training (only if `leuven` was built with -DUSE_CUBLAS).")
      ("h,help"        , "(flag)   Print usage and available parameters")
     ;
-  //  std::cerr<< fOptions->help({"", "Cholesky decomposition [REQUIRED]", "Training data set [REQUIRED]"}) << std::endl;
+  //  std::cerr<< fOptions->help({"", "Training data set [REQUIRED]"}) << std::endl;
   }
 
 
@@ -164,8 +114,6 @@ public:
       // help
       if (result.count("help")>0) {
          std::cout << fOptions->help({"",
-                         "Cholesky decomposition [REQUIRED]",
-                         "Cholesky decomposition [OPTIONAL]",
                          "Training data set [REQUIRED]",
                          "Clustering [REQUIRED]",
                          "Clustering [OPTIONAL]",
@@ -174,25 +122,6 @@ public:
                    << std::endl;
         exit(0);
       }
-
-      // --- incomplete Cholesky related:
-      if (result.count("icholTolError")>0) {
-        fTheIcholTolError = result["icholTolError"].as<double>();
-      } else {
-        throw cxxopts::OptionException("  '--icholTolError' is a required argument");
-      }
-      if (result.count("icholMaxRank")>0) {
-        fTheIcholMaxRank = result["icholMaxRank"].as<size_t>();
-      } else {
-        throw cxxopts::OptionException("  '--icholMaxRank' is a required argument");
-      }
-      if (result.count("icholRBFKernelPar")>0) {
-        fTheIcholRBFKernelPar = result["icholRBFKernelPar"].as< std::vector<INP_DTYPE> >();
-      } else {
-        throw cxxopts::OptionException("  '--icholRBFKernelPar' is a required argument");
-      }
-      fTheIcholRedSetFile   = result["icholRedSetFile"].as<std::string>();
-      fTheIcholPermVectFile = result["icholPermVectFile"].as<std::string>();
 
       // --- training data set related:
       if (result.count("trDataNumber")>0) {
@@ -254,8 +183,6 @@ public:
                   << oe.what()
                   << "\n------------------------------------------------ \n"
                   << fOptions->help({"",
-                                     "Cholesky decomposition [REQUIRED]",
-                                     "Cholesky decomposition [OPTIONAL]",
                                      "Training data set [REQUIRED]",
                                      "Clustering [REQUIRED]",
                                      "Clustering [OPTIONAL]",

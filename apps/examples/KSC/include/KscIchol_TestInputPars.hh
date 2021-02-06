@@ -53,7 +53,7 @@ public:
 
   friend std::ostream& operator<<(std::ostream& os, const KscIchol_TestInputPars& p) {
      os << "\n ===============================================================\n"
-        << "\n Ksc Training & Testing Input Parameters (with defaults for optionals):\n\n"
+        << "\n SPARSE KSC: Training & Testing (with defaults for optionals):\n\n"
         << "  ------ Cholesky decomposition related: \n"
         << "  icholTolError              = " << p.fTheIcholTolError        << "\n"
         << "  icholMaxRank               = " << p.fTheIcholMaxRank         << "\n"
@@ -76,9 +76,9 @@ public:
         }
         if (!p.fTheIcholRedSetFile.empty())
           os << "  icholRedSetFile            = " << p.fTheIcholRedSetFile   << "\n";
-        if (!p.fTheIcholPermVectFile.empty())  
+        if (!p.fTheIcholPermVectFile.empty())
           os << "  icholPermVectFile          = " << p.fTheIcholPermVectFile   << "\n";
-     os << "\n"      
+     os << "\n"
         << "  ------ Training data set related: \n"
         << "  trDataNumber               = " << p.fTheTrDataNumber         << "\n"
         << "  trDataDimension            = " << p.fTheTrDataDimension      << "\n"
@@ -107,15 +107,16 @@ public:
   void DefOpts() {
 
     const std::string description =
-  "\n   Application that trains a sparse KSC model using a 1D RBF kernel on the given\n\
-   training data set and applies the trained model to cluster a given test data set.\n\
-   \n\
-   The sparsity is achived with the combination of approximating the training set\n\
-   kernel matrix by its incomplete Cholesky factorisation (i.e. incomplete QR \n\
-   decomposition of the training data feature map) and using the reduced set method.\n\n";
+"\n Application that Trains a SPARSE KSC model using a 1D RBF kernel on the given\n\
+ Training Data set and applies the trained model, i.e. performs Test (`out-of-\n\
+ same extension`) to cluster a given Test Data set.\n\n\
+ The SPARSITY is achived through the incomplete Cholesky factorisation based (i.\n\
+ e. low rank) approximation of the Training Data set Kernel Matrix. This is done\n\
+ by the application prior to the above hyper paraneter tuning procedure using\n\
+ the given (related) paraneters.\n\n";
 
     if (fOptions) delete fOptions;
-    fOptions = new cxxopts::Options("KSC Training & Testing Application", description);
+    fOptions = new cxxopts::Options("SPARSE KSC Testing i.e. `Out-Of-Sample Extension`: ./KscIchol_Test ", description);
 
     // add argument that are related to the incomplete Cholesky factorisation of
     // the training data set

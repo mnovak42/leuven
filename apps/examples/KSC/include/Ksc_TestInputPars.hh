@@ -1,6 +1,6 @@
 
-#ifndef KSCICHOL_TRAININPUTPARS_HH
-#define KSCICHOL_TRAININPUTPARS_HH
+#ifndef KSC_TESTINPUTPARS_HH
+#define KSC_TESTINPUTPARS_HH
 
 #include "cxxopts.hh"
 
@@ -8,13 +8,13 @@
 #include <string>
 
 template <typename DTYPE, typename INP_DTYPE>
-class KscIchol_TrainInputPars {
+class Ksc_TestInputPars {
 public:
 
-  KscIchol_TrainInputPars() : fOptions(nullptr) {
+  Ksc_TestInputPars() : fOptions(nullptr) {
     DefOpts();
   }
- ~KscIchol_TrainInputPars() {
+ ~Ksc_TestInputPars() {
    if (fOptions) delete fOptions;
   }
 
@@ -22,18 +22,13 @@ public:
   //
   cxxopts::Options*      fOptions;
   //
-  // --- incomplete Cholesky (required)
-  DTYPE                  fTheIcholTolError;
-  size_t                 fTheIcholMaxRank;
-  std::vector<INP_DTYPE> fTheIcholRBFKernelPar;
-  // --- incomplete Cholesky (optional)
-  std::string            fTheIcholRedSetFile;
-  std::string            fTheIcholPermVectFile;
-
   // --- training data set input
   size_t                 fTheTrDataNumber;
   size_t                 fTheTrDataDimension;
   std::string            fTheTrDataFile;
+  // --- test data set input
+  size_t                 fTheTestDataNumber;
+  std::string            fTheTestDataFile;
   // --- clustering (required)
   size_t                 fTheClusterNumber;
   INP_DTYPE              fTheClusterRBFKernelPar;
@@ -42,45 +37,22 @@ public:
   size_t                 fTheClusterEvalOutlierThreshold;
   DTYPE                  fTheClusterEvalWBalance;
   size_t                 fTheClusterLevel;
-  std::string            fTheClusterResDataFile;
   std::string            fTheClusterResFile;
   //
   size_t                 fTheVerbosityLevel;
   size_t                 fTheNumBLASThreads;
   bool                   fUseGPU;
 
-  friend std::ostream& operator<<(std::ostream& os, const KscIchol_TrainInputPars& p) {
+  friend std::ostream& operator<<(std::ostream& os, const Ksc_TestInputPars& p) {
      os << "\n ===============================================================\n"
-        << "\n SPARSE KSC: Training (with defaults for optionals):\n\n"
-        << "  ------ Cholesky decomposition related: \n"
-        << "  icholTolError              = " << p.fTheIcholTolError        << "\n"
-        << "  icholMaxRank               = " << p.fTheIcholMaxRank         << "\n"
-        //<< "  icholRBFKernelPar          = " << p.fTheIcholRBFKernelPar    << "\n\n"
-        << "  icholRBFKernelPar          = ";
-        size_t nIcholPars = p.fTheIcholRBFKernelPar.size();
-        if (nIcholPars == 1) {
-           os << p.fTheIcholRBFKernelPar[0] << "\n";
-        } else if (nIcholPars == 2) {
-           os << "{" << p.fTheIcholRBFKernelPar[0] << ", " << p.fTheIcholRBFKernelPar[1]
-              << "}  --> " << nIcholPars << " number of parameters. \n";
-        } else if (nIcholPars == 3) {
-           os << "{" << p.fTheIcholRBFKernelPar[0] << ", " << p.fTheIcholRBFKernelPar[1]
-              << ", "<< p.fTheIcholRBFKernelPar[2]
-              << "}  --> " << nIcholPars << " number of parameters. \n";
-        } else {
-           os << "{" << p.fTheIcholRBFKernelPar[0] << ", " << p.fTheIcholRBFKernelPar[1]
-              << ", ..., " << p.fTheIcholRBFKernelPar[nIcholPars-1]
-              << "}  --> " << nIcholPars << " number of parameters. \n";
-        }
-        if (!p.fTheIcholRedSetFile.empty())
-          os << "  icholRedSetFile            = " << p.fTheIcholRedSetFile     << "\n";
-        if (!p.fTheIcholPermVectFile.empty())
-          os << "  icholPermVectFile          = " << p.fTheIcholPermVectFile   << "\n";
-     os << "\n"
+        << "\n KSC: Training & Testing (with defaults for optionals):\n\n"
         << "  ------ Training data set related: \n"
         << "  trDataNumber               = " << p.fTheTrDataNumber         << "\n"
         << "  trDataDimension            = " << p.fTheTrDataDimension      << "\n"
         << "  trDataFile                 = " << p.fTheTrDataFile           << "\n\n"
+        << "  ------ Test data set related: \n"
+        << "  tstDataNumber              = " << p.fTheTestDataNumber       << "\n"
+        << "  tstDataFile                = " << p.fTheTestDataFile         << "\n\n"
         << "  ------ Clustering related: \n"
         << "  clNumber                   = " << p.fTheClusterNumber        << "\n"
         << "  clRBFKernelPar             = " << p.fTheClusterRBFKernelPar  << "\n"
@@ -88,7 +60,6 @@ public:
         << "  clEvalOutlierThrs(0)       = " << p.fTheClusterEvalOutlierThreshold<< "\n"
         << "  clEvalWBalance(0.2)        = " << p.fTheClusterEvalWBalance  << "\n"
         << "  clResFile(CRes.dat)        = " << p.fTheClusterResFile       << "\n"
-        << "  clResDataFile(CData.dat)   = " << p.fTheClusterResDataFile   << "\n"
         << "  clLevel(1)                 = " << p.fTheClusterLevel         << "\n\n"
         << "  ------ Other, optional parameters: \n"
         << "  verbosityLevel(2)          = " << p.fTheVerbosityLevel       << "\n"
@@ -103,28 +74,12 @@ public:
   void DefOpts() {
 
     const std::string description =
-"\n Application that Trains a SPARSE KSC model using a 1D RBF kernel on the\n\
- given Training Data set.\n\n\
- The SPARSITY is achived through the incomplete Cholesky factorisation based (i.\n\
- e. low rank) approximation of the Training Data set Kernel Matrix. This is done\n\
- by the application prior to the above hyper paraneter tuning procedure using\n\
- the given (related) paraneters.\n\n";
+"\n Application that Trains a KSC model using a 1D RBF kernel on the given\n\
+ Training Data set and applies the trained model, i.e. performs Test (`out-of-\n\
+ same extension`) to cluster a given Test Data set.\n\n";
 
     if (fOptions) delete fOptions;
-    fOptions = new cxxopts::Options("KSC Training Application: ./KscIchol_Train ", description);
-
-    // add argument that are related to the incomplete Cholesky factorisation of
-    // the training data set
-    fOptions->add_options("Cholesky decomposition [REQUIRED]")
-     ("icholTolError"     , "(double)    Tolerated approximate error in the inc. Cholesky decomposition.",     cxxopts::value<double>())
-     ("icholMaxRank"      , "(size_t)    Maximum number of data to select in the inc. Cholesky decomposition.", cxxopts::value<size_t>())
-     ("icholRBFKernelPar" , "(INP_DTYPE) RBF kernel parameter to be used in the inc. Cholesky decomposition (scalar or vector).",  cxxopts::value< std::vector<INP_DTYPE> >())
-    ;
-
-    fOptions->add_options("Cholesky decomposition [OPTIONAL]")
-     ("icholRedSetFile"    , "(string) The reduced set data is written into this file (if given).",                   cxxopts::value<std::string>()->default_value(""))
-     ("icholPermVectFile"  , "(string) The permutations (done during the ICD) is written into this file (if given).", cxxopts::value<std::string>()->default_value(""))
-    ;
+    fOptions = new cxxopts::Options("KSC Testing i.e. `Out-Of-Sample Extension`: ./Ksc_Test ", description);
 
     fOptions->add_options("Training data set [REQUIRED]")
      ("trDataNumber"   , "(size_t) Number of training data.",         cxxopts::value<size_t>())
@@ -132,16 +87,20 @@ public:
      ("trDataFile"     , "(string) File name of the training data.",  cxxopts::value<std::string>())
     ;
 
+    fOptions->add_options("Test data set [REQUIRED]")
+     ("tstDataNumber"   , "(size_t) Number of test data.",         cxxopts::value<size_t>())
+     ("tstDataFile"     , "(string) File name of the test data.",  cxxopts::value<std::string>())
+    ;
+
     fOptions->add_options("Clustering [REQUIRED]")
      ("clNumber"         , "(size_t)    Number of required cluster.",                  cxxopts::value<size_t>())
      ("clRBFKernelPar"   , "(INP_DTYPE) RBF kernel parameter to be used in the KSC.",  cxxopts::value<INP_DTYPE>())
     ;
     fOptions->add_options("Clustering [OPTIONAL]")
-     ("clEncodingScheme" , "(string) KSC cluster membership encoding scheme (BLF, AMS or BAS).",                     cxxopts::value<std::string>()->default_value("BAS"))
+     ("clEncodingScheme" , "(string) KSC cluster membership encoding scheme (BLF, AMS or BAS).",                        cxxopts::value<std::string>()->default_value("BAS"))
      ("clEvalOutlierThrs", "(size_t) clusters with cardinality below this are considered to be outliers with zero contibution to quality measure (0).", cxxopts::value<std::size_t>()->default_value("0"))
-     ("clEvalWBalance"   , "(DTYPE)  Weight to give to the balance term in the model evaluation (must be in [0,1]).",        cxxopts::value<DTYPE>()->default_value("0.2"))
-     ("clResFile"        , "(string) The result of clustering the training data is written into this file (if clLevel>0).",  cxxopts::value<std::string>()->default_value("CRes.dat"))
-     ("clResDataFile"    , "(string) The reordered training data is written into this file (if clLevel>0).",                 cxxopts::value<std::string>()->default_value("CData.dat"))
+     ("clEvalWBalance"   , "(DTYPE)  Weight to give to the balance term in the model evaluation (must be in [0,1]).",   cxxopts::value<DTYPE>()->default_value("0.2"))
+     ("clResFile"        , "(string) The result of clustering the test data is written into this file (if clLevel>0).", cxxopts::value<std::string>()->default_value("CRes.dat"))
      ("clLevel"          , "(size_t) KSC clustering level: 0 - clustering only; 1 - additional membership strength (AMS, BAS); 2 - membership strength for all clusters (only with AMS).",  cxxopts::value<size_t>()->default_value("1"))
     ;
 
@@ -151,7 +110,7 @@ public:
      ("useGPU"        , "(bool)   Use GPU in the training (only if `leuven` was built with -DUSE_CUBLAS).")
      ("h,help"        , "(flag)   Print usage and available parameters")
     ;
-  //  std::cerr<< fOptions->help({"", "Cholesky decomposition [REQUIRED]", "Training data set [REQUIRED]"}) << std::endl;
+  //  std::cerr<< fOptions->help({"", "Training data set [REQUIRED]"}) << std::endl;
   }
 
 
@@ -160,13 +119,11 @@ public:
     // parse args
     try {
       auto result = fOptions->parse(argc, argv);
-
       // help
       if (result.count("help")>0) {
          std::cout << fOptions->help({"",
-                         "Cholesky decomposition [REQUIRED]",
-                         "Cholesky decomposition [OPTIONAL]",
                          "Training data set [REQUIRED]",
+                         "Test data set [REQUIRED]",
                          "Clustering [REQUIRED]",
                          "Clustering [OPTIONAL]",
                          "Others [OPTIONAL]"
@@ -174,25 +131,6 @@ public:
                    << std::endl;
         exit(0);
       }
-
-      // --- incomplete Cholesky related:
-      if (result.count("icholTolError")>0) {
-        fTheIcholTolError = result["icholTolError"].as<double>();
-      } else {
-        throw cxxopts::OptionException("  '--icholTolError' is a required argument");
-      }
-      if (result.count("icholMaxRank")>0) {
-        fTheIcholMaxRank = result["icholMaxRank"].as<size_t>();
-      } else {
-        throw cxxopts::OptionException("  '--icholMaxRank' is a required argument");
-      }
-      if (result.count("icholRBFKernelPar")>0) {
-        fTheIcholRBFKernelPar = result["icholRBFKernelPar"].as< std::vector<INP_DTYPE> >();
-      } else {
-        throw cxxopts::OptionException("  '--icholRBFKernelPar' is a required argument");
-      }
-      fTheIcholRedSetFile   = result["icholRedSetFile"].as<std::string>();
-      fTheIcholPermVectFile = result["icholPermVectFile"].as<std::string>();
 
       // --- training data set related:
       if (result.count("trDataNumber")>0) {
@@ -209,6 +147,18 @@ public:
         fTheTrDataFile = result["trDataFile"].as<std::string>();
       } else {
         throw cxxopts::OptionException("  '--trDataFile' is a required argument");
+      }
+
+      // --- test data set related:
+      if (result.count("tstDataNumber")>0) {
+        fTheTestDataNumber = result["tstDataNumber"].as<size_t>();
+      } else {
+        throw cxxopts::OptionException("  '--tstDataNumber' is a required argument");
+      }
+      if (result.count("tstDataFile")>0) {
+        fTheTestDataFile = result["tstDataFile"].as<std::string>();
+      } else {
+        throw cxxopts::OptionException("  '--tstDataFile' is a required argument");
       }
 
       // --- clustering related (required):
@@ -236,7 +186,6 @@ public:
       fTheClusterEvalOutlierThreshold = std::max(std::size_t(0), result["clEvalOutlierThrs"].as<std::size_t>());
       fTheClusterEvalWBalance         = std::max(0.            , std::min(1.            , result["clEvalWBalance"].as<DTYPE>()));
       fTheClusterResFile              = result["clResFile"].as<std::string>();
-      fTheClusterResDataFile          = result["clResDataFile"].as<std::string>();
       size_t cLevel = result["clLevel"].as<size_t>();
       if (cLevel<3) {
         fTheClusterLevel = cLevel;
@@ -254,9 +203,8 @@ public:
                   << oe.what()
                   << "\n------------------------------------------------ \n"
                   << fOptions->help({"",
-                                     "Cholesky decomposition [REQUIRED]",
-                                     "Cholesky decomposition [OPTIONAL]",
                                      "Training data set [REQUIRED]",
+                                     "Test data set [REQUIRED]",
                                      "Clustering [REQUIRED]",
                                      "Clustering [OPTIONAL]",
                                      "Others [OPTIONAL]"

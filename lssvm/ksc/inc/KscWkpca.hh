@@ -1,12 +1,9 @@
-
-#ifndef KSCWKPCAICHOL_HH
-#define KSCWKPCAICHOL_HH
+#ifndef KSCWKPCA_HH
+#define KSCWKPCA_HH
 
 /**
- * Sparse Kernel Spectral Clustering based on the incomplete Cholesky
- * decompositon of the kernel matrix.
+ * Kernel Spectral Clustering formulated as weighted Kernel PCA.
  */
-
 
 #include "Kernels.hh"
 #include "Matrix.hh"
@@ -18,41 +15,38 @@
 
 
 template <class TKernel, typename T,  typename TInputD>
-class KscWkpcaIChol {
+class KscWkpca {
 
 public:
 
   /**Constructor */
-  KscWkpcaIChol() {
+  KscWkpca() {
     fUseGPU                = false;
-    // clreate the kernel functon object
+    // create the kernel functon object
     fKernel                = new TKernel();
     // input data needs to be set by the user
-    fIncCholeskyM          = nullptr; // will be destroyed and freed in Train
-    fInputTrainingDataM    = nullptr; // not owned by the clas
-    fEncodingAndQM         = nullptr; // owned by the class
+    fTheInpTrDataM         = nullptr; // not owned by the clas
+    fEncodingAndQM         = nullptr; // owned by the class (AMS)
     // data generated during the training (Train) and all ownd by the class
-    fTheAprxBiasTermsM     = nullptr;
-    fTheReducedSetDataM    = nullptr;
-    fTheReducedSetCoefM    = nullptr;
+    fTheBiasTermsM         = nullptr;
+    fTheEigenVectorM       = nullptr;
     fTheClusterMembershipM = nullptr;
     //
-    fTheAprxScoreVariableM = nullptr;
+    fTheTrScoreVariableM = nullptr;
     //
     fTheResTuningM         = nullptr;
   }
 
   /**Destructor. */
- ~KscWkpcaIChol() {
+ ~KscWkpca() {
     BLAS  theBlas;
     if (fKernel)                delete fKernel;
     if (fEncodingAndQM)         delete fEncodingAndQM;
     //
-    if (fTheAprxBiasTermsM)     { theBlas.Free(*fTheAprxBiasTermsM);     delete fTheAprxBiasTermsM;}
-    if (fTheReducedSetDataM)    { theBlas.Free(*fTheReducedSetDataM);    delete fTheReducedSetDataM;}
-    if (fTheReducedSetCoefM)    { theBlas.Free(*fTheReducedSetCoefM);    delete fTheReducedSetCoefM;}
+    if (fTheBiasTermsM)         { theBlas.Free(*fTheBiasTermsM);         delete fTheBiasTermsM;}
+    if (fTheEigenVectorM)       { theBlas.Free(*fTheEigenVectorM);       delete fTheEigenVectorM;}
     if (fTheClusterMembershipM) { theBlas.Free(*fTheClusterMembershipM); delete fTheClusterMembershipM;}
-    if (fTheAprxScoreVariableM) { theBlas.Free(*fTheAprxScoreVariableM); delete fTheAprxScoreVariableM;}
+    if (fTheTrScoreVariableM)   { theBlas.Free(*fTheTrScoreVariableM);   delete fTheTrScoreVariableM;}
     if (fTheResTuningM)         { theBlas.Free(*fTheResTuningM);         delete fTheResTuningM;}
   }
 
@@ -61,7 +55,7 @@ public:
    * Public method to set the parameters of the kernel function object.
    *
    * The type of the kernel function object is selected at instantiation of an
-   * KscWkpcaIChol object since the class is templated on this type. This public
+   * KscWkpca object since the class is templated on this type. This public
    * method can be used to set the parameters of the kernel function object.
    * Note, that the method will invoke the corresponding \f$ \texttt{SetKernelParameters}\f$
    * method of the kernel function object through the base class KernelBase::SetParameters
@@ -78,27 +72,11 @@ public:
    * Public method to set the pointer to the input data matrix.
    *
    * @param[in] inDataM pointer to the input data matrix that stores the input
-   *   data vector in row-major (memory continous) order. This input data were
-   *   used in the pivoted Cholesky decomposition (of the corresoonding training
-   *   data kernel matrix) and the permutations on the rows of the input data
-   *   matrix must have been done.
+   *   data vector in row-major (memory continous) order.
    * @note The class does NOT own the data i.e. the corresponding memory needs
    *   to be freed by the caller.
    */
-  void  SetInputTrainingDataMatrix(Matrix<TInputD, false>* inTrDataM) { fInputTrainingDataM = inTrDataM; }
-
-
-  /**
-   * Public method to set the incomplete Cholesky matrix.
-   *
-   * @param[in] incChM pointer to the incomplete Cholesky matrix obtained previously
-   *   by the (pivoted) incomplete Cholesky decomposition of training data kernel
-   *   matrix.
-   * @note The class OWNS the data: in incomplete Cholesky matrix will be destroyed
-   *   in the Train method by its QR factorisation. Therefore, the corresponding
-   *   memory is freed in the Train method.
-   */
-  void   SetIncCholeskyMatrix(Matrix<T>* incChM) { fIncCholeskyM = incChM; }
+  void  SetInputTrainingDataMatrix(Matrix<TInputD, false>* inTrDataM) { fTheInpTrDataM = inTrDataM; }
 
 
   /**
@@ -113,22 +91,24 @@ public:
   size_t GetNumberOfClustersToFind() const     { return fNumberOfClusters; }
 
 
+//LOOK HERE: needs to be changed
   /**
     * Request to use GPU in the computations of the approximated eigenvectors related
     * to the training.
     *
-    * When building with the $\texttt{-DUSE_CBLAS}$, $\texttt{CMake}$ configuration
+    * When building with the \f$\texttt{-DUSE_CBLAS}\f$, \f$\texttt{CMake}\f$ configuration
     * option, i.e. with GPU (CUDA) support, the most compute-intensive part of the
-    * training might be accelerated by using the GPU. This is the QR, SVD and
-    * the QU computation of the approximated eigenvalues of the symmetric problem.
-    * These computations are performed on the GPU when this flag is turned to be
-    * true. This can especially be usefull in case of large number of reduce set
-    * sizes.
+    * training might be accelerated by using the GPU. This is the computation of
+    * K-1 leading eigenvectors of the \f$D^{-1}M_D\Omega_{tr}\f$ matrix, especially
+    * the eigen-decompsition using the LAPACK ?SYEVR that might be accelerated
+    * by replacing it with the cuSolver SYEVDX. This computation is performed on
+    * the GPU when this flag is turned to be true. This can especially be usefull
+    * in case of larger training set sizes (\f$ N_{tr} > 2-3000 \f$).
     *
-    * @param val The value to request GPU based computation. If $\texttt{true}$,
-    *  the QR, SVD decompositions as well as the QU computations are done on the
-    *  GPU (in a row, without moving back to the host) instead of the CPU. All
-    *  computations are done by using the CPU otherwise (default).
+    * @param val The value to request GPU based computation. If \f$\texttt{true}\f$,
+    *  computation of the K-1 leading eigenvector of the symmetric problem is
+    *  done on the GPU instead of the CPU. Th computations si done by using the
+    *  CPU otherwise (default).
     */
     void  SetUseGPU(bool val) { fUseGPU = val; }
 
@@ -142,21 +122,18 @@ public:
    * The following encoding, assigment and model quality measures are supported:
    * 1. **sign based encoding** and **Hamming distance**: Balanced Line Fit (BLF) KscEncodingAndQM_BLF
    * 2. **direction based encoding-1** and **cosine distance**: Average Membership Strength (AMS) KscEncodingAndQM_AMS
-   * 3. **direction based encoding-2** and **norm of Euclidean distance**: Balanced Angular Similarity (BAS) KscEncodingAndQM_BAS
-   *       (model evaluation criterion can be used only for \f$ K>2 \f$)
    *
    * @param[in] qmType type of the cluster membership encoding and the corresponding
    *            quality measure
    *            - KscQMType::kBLF  KscEncodingAndQM_BLF
    *            - KscQMType::kAMS  KscEncodingAndQM_AMS
-   *            - KscQMType::kBAS  KscEncodingAndQM_BAS
    */
   void   SetEncodingAndQualityMeasureType(KscQMType qmType) {
             if (fEncodingAndQM) delete fEncodingAndQM;
             switch (qmType) {
               case KscQMType::kBLF: fEncodingAndQM = new KscEncodingAndQM_BLF<T>(); break;
               case KscQMType::kAMS: fEncodingAndQM = new KscEncodingAndQM_AMS<T>(); break;
-              case KscQMType::kBAS: fEncodingAndQM = new KscEncodingAndQM_BAS<T>(); break;
+              default: fEncodingAndQM = new KscEncodingAndQM_AMS<T>();
             };
           }
 
@@ -202,21 +179,20 @@ public:
 
 
   /**
-   * Public method to train the incomplete Cholesky factorisatio based sparese
-   * KSC model.
+   * Public method to train the KSC model.
    *
    * The method will train a KSC model on the training data set which means that
    * all the required parameter values and quantities will be determined and
    * stored in the obejct. The object can be used to cluster any unseen input
    * data after the training using its Test() method. However, certain parameter
-   * values, obejct pointers needs to be set before invoking the training (see
+   * values, object pointers need to be set before invoking the training (see
    * below).
    *
    * **Training steps**:
    *
-   * - computes the K-1 leading, approximated eigenvectors of the \f$ D^{-1}M_D\Omega \f$
-   *   matrix (K is the nimber of required clusters)
-   * - creates the reduce set and computes the corresponding reduce set coefficients
+   * - computes the K-1 leading, eigenvectors of the \f$ D^{-1}M_D\Omega_{tr}\f$
+   *   matrix (K is the number of required clusters and \$\Omega_{tr}\f$ is the
+   *   training data kernel matrix)
    * - generates the cluster membership encoding
    * - (optionally) clusters the training data and computes the corresponding
    *   model selection criterion
@@ -226,10 +202,6 @@ public:
    * - parameters of the kernel function object needs to be set by using the
    *   SetKernelParameters<>() method
    * - the training data matrix pointer must be set by using the SetInputTrainingDataMatrix()
-   *   method
-   * - the incomplete Cholesky decomposition of the training data set kernel
-   *   matrix needs to be done by using an IncCholesky object and the resulted
-   *   the incomplete Cholesky matrix must be set by using the SetIncCholeskyMatrix()
    *   method
    * - the number of required clusters number of clusters must be set by the
    *   SetNumberOfClustersToFind()
@@ -255,7 +227,7 @@ public:
 
 
   /**
-   * Tuning of the hyper parameters of the sparse KSC model.
+   * Tuning of the hyper parameters of the KSC model.
    *
    * The KSC model depends on the number of required clusters and the given kernel
    * function parameters. This method trains a KSC model on the given training
@@ -269,13 +241,9 @@ public:
    * of the resulted model evaluation surface is suggested to select the optimal
    * KSC model parameters.
    *
-   * Since an incomplete Cholesky factorisation based sparese KSC model is
-   * trained on the training data set at each point of 2D parameter grid, **the
-   * sane things needs to be done as described at the Train() method before
-   * invoking the Tune() method***.
-   *
-   * The incomplete Choleksy matrix will be available after the Tune() method,
-   * (unlike after the Train() method that destroyes it)
+   * Since the KSC model is trained on the training data set at each point of 2D
+   * parameter grid, **the same things needs to be done as described at the Train()
+   * method before invoking the Tune() method***.
    *
    * @param theKernelParametersVect vector that contains the kernel parameters
    *  that determines the rows of the 2D parameter grid. The SetKernelParameters<>()
@@ -303,23 +271,6 @@ public:
 
 
   /**
-   * Public method to obtain pointer to the matrix that stores the permuted
-   * input training data.
-   *
-   * The order of the training data was changed during the incomplete Cholesky
-   * decomposition of the corresponding kernel matrix: the feature map with the
-   * highest residual (orthogonal projection) norm is ncluded at each step in
-   * the orthogonalisation. The KSC model expects the training data such that
-   * the corresponding permutations are applied in order to be in sync with
-   * the incomplete Cholesky factor matrix. This form of the training data,
-   * used in the KSC model, can be obtained with this method.
-   *
-   * @return Pointer to the permuted inpt training data matrix i.e. the order of
-   *         the input training data that is consistent in the KSC model.
-   */
-  const Matrix<TInputD, false>*  GetPermutedTrDataMatrix() const { return fInputTrainingDataM; }
-
-  /**
    * Public method to obtain the result of the clustering.
    *
    * @return Pointer to the matrix that stores the result of the clustering. Ecah
@@ -343,16 +294,14 @@ public:
   T         GetTheQMValueAtTheOptimalPoint()          const { return fTheOptimalQMValue; }
 
 
-  const Matrix<TInputD, false>*  GetTheReducedSetDataM() const { return fTheReducedSetDataM;}
-
 private:
 
-  /** Auxilary method to compute theapproximated eigenvetors of the \f$ D^{-1}M_D\Omega \f$ matrix.*/
-  void ComputeApproximatedEigenvectors(Matrix<T>& theAprxEigenvectM, int numBLASThreads, int verbose=0);
+  /** Auxilary method to compute the K-1 leading eigenvetors of the \f$ D^{-1}M_D\Omega_{tr} \f$ matrix.*/
+  void ComputeEigenvectors(Matrix<T>& theTrainingSetKernelM, std::vector<T>& theDegreeVect, int numBLASThreads, int verbose=0);
 
   void ComputeKernelMatrix(Matrix<T>& theKernelM, Matrix<TInputD, false>& theRowDataM, Matrix<TInputD, false>& theColDataM, size_t numThreads);
   void ComputeKernelMatrixPerTherad(Matrix<T>& theKernelM, Matrix<TInputD, false>& theRowDataM, Matrix<TInputD, false>& theColDataM, size_t fromCol, size_t tillCol);
-  
+
 private:
 /**
  * @name Data members
@@ -366,22 +315,19 @@ private:
   size_t                      fNumberOfClusters;
   /**Pointer to the kernel object that implements the kernel function. */
   TKernel*                    fKernel;
-  /**Pointer to the incomplete Cholesky matrix (doesn't owned by the class). */
-  Matrix<T>*                  fIncCholeskyM;
   /**Pointer to the input data to be used for training (doesn't owned by the class). */
-  Matrix<TInputD, false>*     fInputTrainingDataM;
+  Matrix<TInputD, false>*     fTheInpTrDataM;
   //
   KscEncodingAndQM<T>*        fEncodingAndQM;
   //
   // Set during the training (and Test i.e. fTheClusterMembershipM)
   //
   /**Only if BLF or AMS encoding and QM; Approximated bias terms (K-1); computed like Eq.(26) with substit of after Eq(56) */
-  Matrix<T>*                  fTheAprxBiasTermsM;
-  Matrix<TInputD, false>*     fTheReducedSetDataM;
-  Matrix<T>*                  fTheReducedSetCoefM;
+  Matrix<T>*                  fTheBiasTermsM;
+  Matrix<T>*                  fTheEigenVectorM;       // K-1 leading of the D^-1 M_D Omega_tr matrix
   Matrix<T, false>*           fTheClusterMembershipM;
   // kept in Train() only if isQMOnTraining = false i.e. for Tuning
-  Matrix<T>*                  fTheAprxScoreVariableM;
+  Matrix<T>*                  fTheTrScoreVariableM;
   //
   // Set during the tuning (each row corresponds to a given kernel parameter
   // and each col. corresponds to a given cluster number)
@@ -390,11 +336,13 @@ private:
   size_t                      fTheOptimalKernelParIndx;
   T                           fTheOptimalQMValue;
 
+  //
+
 // @} // end Data members  group
 
 
 };
 
-#include "KscWkpcaIChol.tpp"
+#include "KscWkpca.tpp"
 
 #endif
