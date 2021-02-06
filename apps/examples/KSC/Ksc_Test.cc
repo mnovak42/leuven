@@ -14,8 +14,7 @@
 #include "KscEncodingAndQM_AMS.hh"
 
 // for input argument parsing
-#include "KscIchol_TestInputPars.hh"
-#include "cxxopts.hh"
+#include "Ksc_TestInputPars.hh"
 
 //#define CHI2
 
@@ -45,7 +44,7 @@ int main(int argc, char **argv) {
   // -----------------------
   //   Obtain required and optional input argument given to the program by
   //   parsing the input string.
-    KscIchol_TestInputPars<DTYPE, INP_DTYPE> theInParams;
+    Ksc_TestInputPars<DTYPE, INP_DTYPE> theInParams;
     if (0 > theInParams.GetOpts(argc, argv)) {
       return EXIT_FAILURE;
     }

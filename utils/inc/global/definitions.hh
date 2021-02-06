@@ -25,12 +25,13 @@
 
 
 // cmake configuration options: cmake will set the proper values
-#define USE_MKL_BLAS 1
-#define USE_OPEN_BLAS 0
+#define USE_MKL_BLAS 0
+#define USE_OPEN_BLAS 1
 #define USE_ATLAS_BLAS 0
 #define USE_NETLIB_BLAS 0
 #define USE_CBLAS_WRAPPER 1
 #define USE_CUBLAS 1
+#define CONFIG_VERBOSE 0
 
 #if USE_CBLAS_WRAPPER
   const bool kRowMajorPossible = true;
