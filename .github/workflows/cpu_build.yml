@@ -99,8 +99,8 @@ jobs:
 
           if [ "${{ matrix.compiler }}" = "gcc" ]; then
             brew install gcc@${{ matrix.version }}
-            echo "CC=/usr/bin/gcc-${{ matrix.version }}" >> $GITHUB_ENV
-            echo "CXX=/usr/bin/g++-${{ matrix.version }}" >> $GITHUB_ENV
+            echo "CC=/usr/local/bin/gcc-${{ matrix.version }}" >> $GITHUB_ENV
+            echo "CXX=/usr/local/bin/g++-${{ matrix.version }}" >> $GITHUB_ENV
           else
             sudo xcode-select -switch /Applications/Xcode_${{ matrix.version }}.app
             echo "CC=clang" >> $GITHUB_ENV
