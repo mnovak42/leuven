@@ -2,9 +2,9 @@
 ## Testing of the leuven library and framework
 ################################################################################
 
-if (${CMAKE_VERSION} VERSION_GREATER "3.17.0")
-  cmake_policy( SET CMP0104 OLD )
-endif ()
+#if (${CMAKE_VERSION} VERSION_GREATER "3.17.0")
+#  cmake_policy( SET CMP0104 OLD )
+#endif ()
 
 ## ----------------------------------------------------------------------------
 ## Retrieve configuration i.e. dependencies locations set at the end of 'utils'

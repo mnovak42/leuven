@@ -1,9 +1,9 @@
 ## ----------------------------------------------------------------------------
 ## Minimum required CMake version, project name, CMake text colours, etc...
 ## ----------------------------------------------------------------------------
-
-cmake_minimum_required (VERSION 3.3.0 FATAL_ERROR)
-project ( leuven )
+# take policies from up to CMake 3.18 to avoid warnings concerning CMP0104.
+cmake_minimum_required (VERSION 3.3...3.18 FATAL_ERROR)
+project (leuven)
 
 # ensure out of source build
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
