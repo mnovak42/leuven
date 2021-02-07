@@ -44,7 +44,6 @@ if (USE_CUBLAS AND ON_GPU)
    add_definitions(-DON_GPU)
 endif (USE_CUBLAS AND ON_GPU)
 
-message (STATUS "${leuven_LIBRARIES}")
 
 #-------------------------------------------------------------------------------
 # Locate sources and headers for this project

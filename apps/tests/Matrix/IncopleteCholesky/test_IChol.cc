@@ -24,9 +24,9 @@ typedef double INP_DTYPE;
 
 int main() {
   double duration;
-  struct timeval start,finish;  
+  struct timeval start,finish;
 
-  
+
   // file name to read/write
 //  const std::string  inFname = "inMatrix.dat";
   const std::string  inFname = "training_data_100000_std";
@@ -40,7 +40,7 @@ int main() {
   // only for memory managmenet
   BLAS theBlas;
   theBlas.Malloc(theInputDataM);
-  // read data 
+  // read data
   theInputDataM.ReadFromFile(inFname);
 
   // IChol
@@ -54,11 +54,11 @@ int main() {
   double tolError = 1.0E-3;
   size_t maxItr   = 1000;//260;
   bool   transp   = true;
-  
+
   printf("\n ---- Starts: incomplete Cholesky decomposition of the Kernel matrix\n");
-  gettimeofday(&start, NULL); 
+  gettimeofday(&start, NULL);
   theIChol.Decompose(tolError, maxItr, transp);
-  gettimeofday(&finish, NULL); 
+  gettimeofday(&finish, NULL);
   printf("\n ---- Finished: incomplete Cholesky decomposition of the Kernel matrix\n");
 
   duration = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
@@ -68,7 +68,7 @@ int main() {
 
   // print the ICholMatrix
   //theIChol.GetICholMatrix()->WriteToFile("theICholM");
-  
+
   std::cerr<< " --- Forming the permutated input data matrix. " << std::endl;
   // write the input data ino file by taking into account the permutations perfomred during the ICD
   // (row major order)
@@ -77,12 +77,12 @@ int main() {
   const size_t sizeOfRow = sizeof(DTYPE)*theInputDataM.GetNumCols();
   for (size_t ir=0; ir<theInputDataM.GetNumRows(); ++ir)
     memcpy(thePermutedInputDataM.GetPtrToBlock(ir), theInputDataM.GetPtrToBlock(theIChol.GetPermutationVector()[ir]), sizeOfRow);
-  
+
   std::cerr<< " --- Writing the permutated input data into file. " << std::endl;
   thePermutedInputDataM.WriteToFile("PermInpData.dat");
 
   // free allocated data
   theBlas.Free(theInputDataM);
-  
+
   return 0;
 }

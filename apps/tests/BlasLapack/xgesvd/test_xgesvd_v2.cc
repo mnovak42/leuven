@@ -34,14 +34,14 @@ typedef float DTYPE;
    -3.49   4.02   9.80  10.00   4.27
     9.84   0.15  -8.99  -6.02  -5.31
 
-  Example Program Results: 
+  Example Program Results:
   ========================
 
-   
-   LAPACKE_dgesvd or LAPACKE_sgesvd (row/col-major) Example Program Results: 
-   with JOBU='S' and JOBVT='S' i.e. the min(M,N) left and right singular vectors 
+
+   LAPACKE_dgesvd or LAPACKE_sgesvd (row/col-major) Example Program Results:
+   with JOBU='S' and JOBVT='S' i.e. the min(M,N) left and right singular vectors
    are computed and returned as the min(M,N) cols of U (M-by-M) and the min(M,N)
-   cols of V (N-by-N). Note, that not V but V^T is computed so actually these 
+   cols of V (N-by-N). Note, that not V but V^T is computed so actually these
    min(M,N) cols of V are min(M,N) rows of the computed V^T.
 
    Singular values: min(M,N)
@@ -55,14 +55,14 @@ typedef float DTYPE;
     -0.47  -0.35   0.39   0.16  -0.52
      0.29   0.58  -0.02   0.38  -0.65
 
-   Right singular vectors (stored rowwise):  
+   Right singular vectors (stored rowwise):
     -0.25  -0.40  -0.69  -0.37  -0.41
      0.81   0.36  -0.25  -0.37  -0.10
     -0.26   0.70  -0.22   0.39  -0.49
      0.40  -0.45   0.25   0.43  -0.62
     -0.22   0.14   0.59  -0.63  -0.44
  */
- 
+
 
 int main() {
   // On the HOST
@@ -74,7 +74,7 @@ int main() {
   Matrix<DTYPE> SIGMA(min(M,N),1);
 
 
-#if defined(USE_CUBLAS) && defined(ON_GPU)  
+#if defined(USE_CUBLAS) && defined(ON_GPU)
   //GPU: On the DEVICE (strictly col.-major order)
   Matrix<DTYPE> A_d(M,N);
   Matrix<DTYPE> SIGMA_d(min(M,N),1);
@@ -83,22 +83,24 @@ int main() {
   // for fData memory managmenet and BLAS routines
   BLAS theBlas;
   theBlas.SetNumThreads(1);
-  #if defined(USE_CUBLAS) && defined(ON_GPU)  
+#if defined(USE_CUBLAS) && defined(ON_GPU)
   //GPU: for Matrix::fData memory managmenet and BLAS routines on the GPU
   BLAS_gpu  theBlas_gpu;
-  #endif
+#endif
 
   // allocate memory on the HOST
   theBlas.Malloc(A);
   theBlas.Calloc(SIGMA);
-  #if defined(USE_CUBLAS) && defined(ON_GPU) && CONFIG_VERBOSE
-    #pragma message("-------- USING cuBLAS ----")
+#if defined(USE_CUBLAS) && defined(ON_GPU)
+#if CONFIG_VERBOSE
+  #pragma message("-------- USING cuBLAS ----")
+#endif
   // allocate memory on the DEVICE
   theBlas_gpu.Malloc(A_d);
   theBlas_gpu.Calloc(SIGMA_d);
-  #endif
-  
-  
+#endif
+
+
   // fill A:
   //  8.79   9.93   9.83   5.45   3.16
   //  6.11   6.91   5.04  -0.27   7.98
@@ -113,63 +115,63 @@ int main() {
   A.SetElem(4,0,-3.49); A.SetElem(4,1, 4.02); A.SetElem(4,2, 9.80); A.SetElem(4,3,10.00); A.SetElem(4,4, 4.27);
   A.SetElem(5,0, 9.84); A.SetElem(5,1, 0.15); A.SetElem(5,2,-8.99); A.SetElem(5,3,-6.02); A.SetElem(5,4,-5.31);
 
-  printf (" Top left corner of matrix A: \n"); 
+  printf (" Top left corner of matrix A: \n");
   for (size_t ir=0; ir<min(A.GetNumRows(),7); ++ir) {
       for (size_t ic=0; ic<min(A.GetNumCols(),7); ++ic) printf ("%12.2E", A.GetElem(ir,ic));
-      printf ("\n"); 
+      printf ("\n");
   }
 
 
-#if defined(USE_CUBLAS) && defined(ON_GPU)  
+#if defined(USE_CUBLAS) && defined(ON_GPU)
   //GPU: copy the fData array content of A,U,VT and SIGMA to the GPU
   theBlas_gpu.CopyToGPU(    A,     A_d);
   theBlas_gpu.CopyToGPU(SIGMA, SIGMA_d);
 #endif
-  
-  // compute the min(M,N) left signular vectors and store as cols of A 
-  
+
+  // compute the min(M,N) left signular vectors and store as cols of A
+
   double duration;
-  struct timeval start,finish;  
-  gettimeofday(&start, NULL); 
+  struct timeval start,finish;
+  gettimeofday(&start, NULL);
 
   printf("\n ---- XDGESVD (LAPACK-SVD: A = U SIGMA V^T starts on ");
-  #if defined(USE_CUBLAS) && defined(ON_GPU) 
+#if defined(USE_CUBLAS) && defined(ON_GPU)
         printf(" GPU!\n");
         theBlas_gpu.XGESVD(A_d, SIGMA_d);
-  #else
-        printf(" CPU!\n"); 
+#else
+        printf(" CPU!\n");
         theBlas.XGESVD(A, SIGMA);
-  #endif
+#endif
 
-  gettimeofday(&finish, NULL); 
+  gettimeofday(&finish, NULL);
   duration = ((double)(finish.tv_sec-start.tv_sec)*1000000 + (double)(finish.tv_usec-start.tv_usec)) / 1000000;
   printf("\n\n == TIMING: %lf [s] \n\n",  duration);
 
-  #if defined(USE_CUBLAS) && defined(ON_GPU)
+#if defined(USE_CUBLAS) && defined(ON_GPU)
   //GPU: copy back the resulted fData arraies from GPU to the host SIGMA, U, VT
   theBlas_gpu.CopyFromGPU(A_d,A);
   theBlas_gpu.CopyFromGPU(SIGMA_d,SIGMA);
-  #endif
-  
-  
+#endif
+
+
   // Print results:
-  
-  // input matrix A (M,N): DISTROYED 
-//  printf (" Top left corner of matrix A: \n"); 
+
+  // input matrix A (M,N): DISTROYED
+//  printf (" Top left corner of matrix A: \n");
 //  for (size_t ir=0; ir<min(A.GetNumRows(),7); ++ir) {
 //      for (size_t ic=0; ic<min(A.GetNumCols(),7); ++ic) printf ("%12.2E", A.GetElem(ir,ic));
-//      printf ("\n"); 
+//      printf ("\n");
 //  }
 
-  printf ("\n SIGMA (diagonal) matrix: \n"); 
+  printf ("\n SIGMA (diagonal) matrix: \n");
   for (size_t ir=0; ir<min(SIGMA.GetNumRows(),7); ++ir) {
     printf ("%12.3E", SIGMA.GetElem(ir,0));
   }
 
-  printf ("\n Top left corner of matrix A: \n"); 
+  printf ("\n Top left corner of matrix A: \n");
   for (size_t ir=0; ir<min(A.GetNumRows(),7); ++ir) {
       for (size_t ic=0; ic<min(A.GetNumCols(),7); ++ic) printf ("%12.2E", A.GetElem(ir,ic));
-      printf ("\n"); 
+      printf ("\n");
   }
 
 
@@ -182,6 +184,6 @@ int main() {
   theBlas_gpu.Free(A_d);
   theBlas_gpu.Free(SIGMA_d);
 #endif
-  
+
   return 0;
 }

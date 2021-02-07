@@ -5,22 +5,18 @@
 //
 
 #include <cuda_runtime.h>
+#include "cudaUtils.hh"
 
 template < class T >
 void CUBLAS::Malloc ( Matrix<T>& m ) {
-  cudaError_t cudaError;
-  cudaError = cudaMalloc ( m.GetDataPtrAdrs(), m.GetSize()*sizeof( T ) );
-  assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );
-  _unused (cudaError);
+  cudaErrchk ( cudaMalloc ( m.GetDataPtrAdrs(), m.GetSize()*sizeof( T ) ) );
 }
 
 
 template<class T>
 void CUBLAS::Calloc ( Matrix<T>& m ) {
-  cudaError_t cudaError;
-  cudaError = cudaMalloc(  m.GetDataPtrAdrs(), m.GetSize()*sizeof( T ) );
-  assert ( cudaError==cudaSuccess && cudaGetErrorString ( cudaError) );
-  if ( cudaError==cudaSuccess ) cudaMemset( m.GetDataPtr(), 0.0, m.GetSize()*sizeof( T ));
+  cudaErrchk ( cudaMalloc(  m.GetDataPtrAdrs(), m.GetSize()*sizeof( T ) ) );
+  cudaMemset( m.GetDataPtr(), 0.0, m.GetSize()*sizeof( T ));
 }
 
 
@@ -32,26 +28,17 @@ void   CUBLAS::Free(Matrix<T>& m) {
 
 template<class T>
 void CUBLAS::CopyToGPU(Matrix<T>& m_h, Matrix<T>& m_d) {
-  cudaError_t cudaError;
-  cudaError = cudaMemcpy(m_d.GetDataPtr(), m_h.GetDataPtr(), m_h.GetSize()*sizeof( T ), cudaMemcpyHostToDevice);
-  assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );
-  _unused (cudaError);
+  cudaErrchk ( cudaMemcpy(m_d.GetDataPtr(), m_h.GetDataPtr(), m_h.GetSize()*sizeof( T ), cudaMemcpyHostToDevice) );
 }
 
 template<class T>
 void CUBLAS::CopyFromGPU(Matrix<T>& m_d, Matrix<T>& m_h) {
-  cudaError_t cudaError;
-  cudaError = cudaMemcpy(m_h.GetDataPtr(), m_d.GetDataPtr(), m_h.GetSize()*sizeof( T ), cudaMemcpyDeviceToHost);
-  assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );
-  _unused(cudaError);
+  cudaErrchk ( cudaMemcpy(m_h.GetDataPtr(), m_d.GetDataPtr(), m_h.GetSize()*sizeof( T ), cudaMemcpyDeviceToHost) );
 }
 
 template<class T>
 void CUBLAS::CopyOnGPU(T* from_d, T* to_d, size_t size) {
-  cudaError_t cudaError;
-  cudaError = cudaMemcpy(to_d, from_d, size, cudaMemcpyDeviceToDevice);
-  assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );
-  _unused(cudaError);
+  cudaErrchk ( cudaMemcpy(to_d, from_d, size, cudaMemcpyDeviceToDevice) );
 }
 
 
@@ -92,12 +79,9 @@ void CUBLAS::XGEMM(Matrix<T>& A_d, Matrix<T>& B_d, Matrix<T>& C_d, T alpha,
                          const double *beta,
                          double *C, int ldc)
   */
-  cublasStatus_t cuBlasStatus;
-  cuBlasStatus = xgemm(handle, theTransA, theTransB, theM, theN, theK, &alpha,
+  cuBlasErrchk ( xgemm(handle, theTransA, theTransB, theM, theN, theK, &alpha,
                        A_d.GetDataPtr(), theLDA, B_d.GetDataPtr(), theLDB, &beta,
-                       C_d.GetDataPtr(), theLDC);
-  assert ( cuBlasStatus==CUBLAS_STATUS_SUCCESS && "\n cuBlasStatus is NOT SUCCESS \n");
-  _unused (cuBlasStatus);
+                       C_d.GetDataPtr(), theLDC) );
   // Destroy the CUBLAS handle
   cublasDestroy(handle);
 }
@@ -128,9 +112,7 @@ void CUBLAS::XGESVD(Matrix<T>& A_d,  Matrix<T>& SIGMA_d, const char* JOBU,
   //
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XGESVD-1 is NOT SUCCESS \n");
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space of SVD (and check) ....D/S
   T dum = 0.;
@@ -139,25 +121,19 @@ void CUBLAS::XGESVD(Matrix<T>& A_d,  Matrix<T>& SIGMA_d, const char* JOBU,
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
   T* rwork_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVD-2 is NOT SUCCESS \n");
-  cuda_status = cudaMalloc((void**)&rwork_d, sizeof(T)*std::min(M,N)-1);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVD-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
+  cudaErrchk ( cudaMalloc((void**)&rwork_d, sizeof(T)*std::min(M,N)-1) );
   //
   // On DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVD-4 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call cuslover-Dense-geSVD and compute SVD
-  cusolver_status = xgesvd(handle, jobu, jobvt, M, N, A_d.GetDataPtr(), LDA,
+  cuSolverErrchk ( xgesvd(handle, jobu, jobvt, M, N, A_d.GetDataPtr(), LDA,
                           SIGMA_d.GetDataPtr(), U_d.GetDataPtr(), LDU,
-                          VT_d.GetDataPtr(), LDVT, work_d, lwork, rwork_d, info_d);
+                          VT_d.GetDataPtr(), LDVT, work_d, lwork, rwork_d, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XGESVD-5 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESVD-6 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -183,9 +159,7 @@ void CUBLAS::XGESVD(Matrix<T>& A_d,  Matrix<T>& SIGMA_d) {
   //
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XGESVD-1 is NOT SUCCESS \n");
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space of SVD (and check) ....D/S
   T dum = 0.;
@@ -194,25 +168,19 @@ void CUBLAS::XGESVD(Matrix<T>& A_d,  Matrix<T>& SIGMA_d) {
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
   T* rwork_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVD-2 is NOT SUCCESS \n");
-  cuda_status = cudaMalloc((void**)&rwork_d, sizeof(T)*std::min(M,N)-1);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVD-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
+  cudaErrchk ( cudaMalloc((void**)&rwork_d, sizeof(T)*std::min(M,N)-1) );
   //
   // On DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVD-4 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call cuslover-Dense-geSVD and compute SVD
-  cusolver_status = xgesvd(handle, jobu, jobvt, M, N, A_d.GetDataPtr(), LDA,
+  cuSolverErrchk ( xgesvd(handle, jobu, jobvt, M, N, A_d.GetDataPtr(), LDA,
                           SIGMA_d.GetDataPtr(), U_d, LDU, VT_d, LDVT, work_d,
-                          lwork, rwork_d, info_d);
+                          lwork, rwork_d, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XGESVD-5 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESVD-6 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -232,31 +200,24 @@ void CUBLAS::XGEQRF(Matrix<T>& A_d,  Matrix<T>& TAU_d) {
   //
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XGEQRF-1 is NOT SUCCESS \n");
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space of QR (and check) ....D/S
   int lwork = XGEQRFBufferSize(handle, M, N, A_d.GetDataPtr(), LDA);
   //
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGEQRF-2 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
   //
   // On DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGEQRF-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call cuslover-Dense-geQRF and compute QR factorization
-  cusolver_status = xgeqrf(handle, M, N, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr(),
-                           work_d, lwork, info_d);
+  cuSolverErrchk ( xgeqrf(handle, M, N, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr(),
+                           work_d, lwork, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XGEQRF-4 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XGEQRF-5 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -283,12 +244,7 @@ void CUBLAS::XORMQR(Matrix<T>& C_d,  Matrix<T>& A_d, Matrix<T>& TAU_d,
   //
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-//  printf("\n%s\n",cusolverGetErrorString(cusolver_status));
-//  PrintCuSolverStatus(cusolver_status);
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XORMQR-1 is NOT SUCCESS \n");
-
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space (and check) ....D/S
   int lwork = XORMQRBufferSize(handle, theSideQ, theTransQ, M, N, K, A_d.GetDataPtr(),
@@ -296,23 +252,18 @@ void CUBLAS::XORMQR(Matrix<T>& C_d,  Matrix<T>& A_d, Matrix<T>& TAU_d,
   //
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XORMQR-2 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
   //
   // On DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XORMQR-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call cuslover-Dense-ormQR and compute C = QC or Q^TC or CQ or CQ^T
-  cusolver_status = xormqr(handle, theSideQ, theTransQ, M, N, K, A_d.GetDataPtr(),
-                           LDA, TAU_d.GetDataPtr(), C_d.GetDataPtr(), LDC,
-                           work_d, lwork, info_d);
+  cuSolverErrchk ( xormqr(handle, theSideQ, theTransQ, M, N, K, A_d.GetDataPtr(),
+                          LDA, TAU_d.GetDataPtr(), C_d.GetDataPtr(), LDC,
+                          work_d, lwork, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XORMQR-4 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XORMQR-5 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -332,34 +283,24 @@ void CUBLAS::XORGQR(Matrix<T>& A_d, Matrix<T>& TAU_d) {
   int LDA = A_d.GetNumRows();
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-//  printf("\n%s\n",cusolverGetErrorString(cusolver_status));
-//  PrintCuSolverStatus(cusolver_status);
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XORGQR-1 is NOT SUCCESS \n");
-
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space (and check) ....D/S
   int lwork = XORGQRBufferSize(handle, M, N, K, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr());
   //
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XORGQR-2 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
   //
   // On DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XORGQR-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call cuslover-Dense-orgQR and form the matrix Q from a previous A = QR, that results in the inout A and Tau
-  cusolver_status = xorgqr(handle, M, N, K, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr(),
-                           work_d, lwork, info_d);
+  cuSolverErrchk ( xorgqr(handle, M, N, K, A_d.GetDataPtr(), LDA, TAU_d.GetDataPtr(),
+                          work_d, lwork, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XORGQR-4 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XORGQR-5 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -382,11 +323,7 @@ void CUBLAS::XGESV(Matrix<T>& A_d,  Matrix<T>& B_d, bool isTransA) {
   //
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-//  printf("\n%s\n",cusolverGetErrorString(cusolver_status));
-//  PrintCuSolverStatus(cusolver_status);
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XGESV-1 is NOT SUCCESS \n");
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   //  ------------------------------------------------------------------------
   //  The LU decompositon of the input matrix A using XGETRF
@@ -397,25 +334,18 @@ void CUBLAS::XGESV(Matrix<T>& A_d,  Matrix<T>& B_d, bool isTransA) {
   //
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESVR-2 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
   //
   // On DEVICE memory pointers
   int*  info_d = NULL;
   int*  ipiv_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESV-3 is NOT SUCCESS \n");
-  cuda_status = cudaMalloc ((void**)&ipiv_d, sizeof(int)*std::min(M,N));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XGESV-4 is NOT SUCCESS \n");
-
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
+  cudaErrchk ( cudaMalloc ((void**)&ipiv_d, sizeof(int)*std::min(M,N)) );
   //
   // Call cuslover-Dense-getrf for the LU decomposition of A (squared N-by-N)
-  cusolver_status = xgetrf(handle, M, N, A_d.GetDataPtr(), LDA, work_d, ipiv_d, info_d);
+  cuSolverErrchk ( xgetrf(handle, M, N, A_d.GetDataPtr(), LDA, work_d, ipiv_d, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XGESV-5 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESV-6 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   //  ------------------------------------------------------------------------
   //  The solution of AX=B using XGETRS (after the LU decompositon of A)
@@ -423,12 +353,10 @@ void CUBLAS::XGESV(Matrix<T>& A_d,  Matrix<T>& B_d, bool isTransA) {
   //
   // Call cuslover-Dense-getrs for solving AX=B after the LU decomposition of the
   // squared matrix A (N-by-N)
-  cusolver_status = xgetrs(handle, theTransA, N, NRHS, A_d.GetDataPtr(), LDA,
-                           ipiv_d, B_d.GetDataPtr(), LDB, info_d);
+  cuSolverErrchk ( xgetrs(handle, theTransA, N, NRHS, A_d.GetDataPtr(), LDA,
+                           ipiv_d, B_d.GetDataPtr(), LDB, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XGESV-6 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XGESV-7 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -465,32 +393,25 @@ int CUBLAS::XSYEVDX(Matrix<T>& A_d,  Matrix<T>& EIGENVALS_d,
   int   M = 0;
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XSYEVDX-1 is NOT SUCCESS \n");
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space of D/S-SYEVDX
   int lwork = XSYEVDXBufferSize(handle, jobz, range, uplo, N, A_d.GetDataPtr(),
                                 LDA, vL, vU, iL, iU, &M, EIGENVALS_d.GetDataPtr());
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XSYEVDX-2 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
   //
   // Further on DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XSYEVDX-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call eigensolver cuslover-Dense-<D/S>-syevdx and compute the eigenvalues
-  cusolver_status = xsyevdx(handle, jobz, range, uplo, N, A_d.GetDataPtr(), LDA,
+  cuSolverErrchk ( xsyevdx(handle, jobz, range, uplo, N, A_d.GetDataPtr(), LDA,
                             vL, vU, iL, iU, &M, EIGENVALS_d.GetDataPtr(),
-                            work_d, lwork, info_d);
+                            work_d, lwork, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XSYEVDX-4 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XSYEVDX-5 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -535,32 +456,25 @@ CUBLAS::XSYEVDX(Matrix<T>& A_d,  Matrix<T>& EIGENVALS_d, Matrix<T>& EIGENVECTS_d
   //
   // Create a cusolverDnHandle_t handle (and check)
   cusolverDnHandle_t handle;
-  cusolverStatus_t cusolver_status = CUSOLVER_STATUS_SUCCESS;
-  cusolver_status = cusolverDnCreate( &handle );
-  assert(CUSOLVER_STATUS_SUCCESS == cusolver_status && "\n CUBLAS::XSYEVDX-1 is NOT SUCCESS \n");
+  cuSolverErrchk ( cusolverDnCreate( &handle ) );
   //
   // Query work space of D/S-SYEVDX
   int lwork = XSYEVDXBufferSize(handle, jobz, range, uplo, N, A_d.GetDataPtr(),
                                 LDA, vL, vU, iL, iU, &M, EIGENVALS_d.GetDataPtr());
   // Allocate workspace on DEVICE
   T*  work_d = NULL;
-  cudaError_t cuda_status = cudaSuccess;
-  cuda_status = cudaMalloc((void**)&work_d, sizeof(T)*lwork);
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XSYEVDX-2 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc((void**)&work_d, sizeof(T)*lwork) );
   //
   // Further on DEVICE memory pointers
   int*  info_d = NULL;
-  cuda_status = cudaMalloc ((void**)&info_d, sizeof(int));
-  assert(cudaSuccess == cuda_status && "\n CUBLAS::XSYEVDX-3 is NOT SUCCESS \n");
+  cudaErrchk ( cudaMalloc ((void**)&info_d, sizeof(int)) );
   //
   // Call eigensolver cuslover-Dense-<D/S>-syevdx and compute the eigenvalues
-  cusolver_status = xsyevdx(handle, jobz, range, uplo, N, A_d.GetDataPtr(), LDA,
-                            vL, vU, iL, iU, &M, EIGENVALS_d.GetDataPtr(),
-                            work_d, lwork, info_d);
+  cuSolverErrchk ( xsyevdx(handle, jobz, range, uplo, N, A_d.GetDataPtr(), LDA,
+                           vL, vU, iL, iU, &M, EIGENVALS_d.GetDataPtr(),
+                           work_d, lwork, info_d) );
   // Synchronize
-  cuda_status = cudaDeviceSynchronize();
-  assert(cusolver_status == CUSOLVER_STATUS_SUCCESS && "\n CUBLAS::XSYEVDX-4 is NOT SUCCESS \n");
-  assert(cuda_status == cudaSuccess && "\n CUBLAS::XSYEVDX-5 is NOT SUCCESS \n");
+  cudaErrchk ( cudaDeviceSynchronize() );
   //
   // free allocated memory
   cusolverDnDestroy (handle);
@@ -570,9 +484,7 @@ CUBLAS::XSYEVDX(Matrix<T>& A_d,  Matrix<T>& EIGENVALS_d, Matrix<T>& EIGENVECTS_d
   // Take the orthonormal eigenevtors (from the overwritten cols. of the input
   // A matrix and write into the cols of the EIGENVECTS matrix (note, that it's
   // an on device copy!)
-  cudaError_t cudaError;
-  cudaError = cudaMemcpy(EIGENVECTS_d.GetDataPtr(), A_d.GetDataPtr(), N*M*sizeof(T), cudaMemcpyDeviceToDevice);
-  assert ( cudaError==0 && cudaGetErrorString ( cudaError ) );
-//
+  cudaErrchk ( cudaMemcpy(EIGENVECTS_d.GetDataPtr(), A_d.GetDataPtr(), N*M*sizeof(T), cudaMemcpyDeviceToDevice) );
+  //
   return M;
 }

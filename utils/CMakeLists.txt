@@ -276,12 +276,16 @@ if (USE_CUBLAS)
     add_definitions (-DUSE_CUBLAS)
     message (STATUS "Found CUDA at ${CUDA_TOOLKIT_ROOT_DIR} (${CUDA_VERSION_STRING})")
     include_directories (AFTER SYSTEM ${CUDA_INCLUDE_DIRS})
-    message (STATUS "CUDA INCLUDE DIRECTORY = ${CUDA_INCLUDE_DIRS}")
-    message (STATUS "CUDA LIBRARIES = ${CUDA_LIBRARIES}")
-    message (STATUS "CUDA CUBLAS LIBRARIES = ${CUDA_CUBLAS_LIBRARIES}")
-    message (STATUS "CUDA cudart static LIBRARY = ${CUDA_cudart_static_LIBRARY}")
-    message (STATUS "CUDA cusolver LIBRARY = ${CUDA_cusolver_LIBRARY}")
+#    message (STATUS "CUDA INCLUDE DIRECTORY = ${CUDA_INCLUDE_DIRS}")
+#    message (STATUS "CUDA LIBRARIES = ${CUDA_LIBRARIES}")
+#    message (STATUS "CUDA CUBLAS LIBRARIES = ${CUDA_CUBLAS_LIBRARIES}")
+#    message (STATUS "CUDA cudart static LIBRARY = ${CUDA_cudart_static_LIBRARY}")
+#    message (STATUS "CUDA cusolver LIBRARY = ${CUDA_cusolver_LIBRARY}")
     message (STATUS " ")
+    enable_language(CUDA)
+    # Disable -pedantic because nvcc uses GCC extensions for line directives;
+    # leave all other warnings enabled.
+    set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcompiler -Wno-pedantic")
   else (CUDA_FOUND)
     message(FATAL_ERROR "REQUIRED CUDA AND/OR cuBLAS LIBRARIES WERE NOT FOUND")
   endif (CUDA_FOUND)
@@ -310,25 +314,12 @@ list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/global/definitions.hh)
 
 message (STATUS "${Green}===== Setting up the leuven library =====${ColourReset}")
 if (USE_CUBLAS)
-  enable_language(CUDA)
-  SET (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS}
-       -Xcompiler
-       -fPIC
-       -Xcudafe
-       --diag_suppress=boolean_controlling_expr_is_constant
-       --disable-warnings
-       -lineinfo"
-  )
   file (GLOB CUDASOURCES ${CMAKE_SOURCE_DIR}/utils/src/CUBLAS.cu)
   list (APPEND CXXHEADERS ${CMAKE_SOURCE_DIR}/utils/inc/CUBLAS.hh ${CMAKE_SOURCE_DIR}/utils/inc/CUBLAS.tpp)
-  #
   cuda_add_library(leuven STATIC ${CXXSOURCES} ${CUDASOURCES})
   set_property(TARGET leuven PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-  set_property(TARGET leuven PROPERTY CUDA_ARCHITECTURES 30)
-  target_link_libraries(leuven ${CPU_BLAS_LIBRARY} ${CUDA_LIBRARY}
-                      ${CUDA_cudart_static_LIBRARY} ${CUDA_CUBLAS_LIBRARY}
-                      ${CUDA_cusolver_LIBRARY})
   set_target_properties(leuven PROPERTIES COMPILE_FLAGS ${CMAKE_CXX_FLAGS})
+  target_link_libraries(leuven ${CPU_BLAS_LIBRARY} ${CUDA_LIBRARIES})
 else ()
   add_library(leuven STATIC ${CXXSOURCES})
   target_link_libraries(leuven ${CPU_BLAS_LIBRARY})
