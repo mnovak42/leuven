@@ -14,6 +14,14 @@ if (NOT leuven_FOUND)
 endif ()
 
 
+## ----------------------------------------------------------------------------
+## Find available thread libraries and prefer pthreads
+##
+set (CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set (THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package (Threads REQUIRED)
+
+
 #-------------------------------------------------------------------------------
 # Set the CXX flags that were used when building the library
 #
