@@ -1,4 +1,4 @@
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mnovak42/leuven/cpu-build.yml?branch=master?label=leuven%3A%20CPU-build%20%26%20tests&logo=GitHub&logoColor=blue&style=plastic)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mnovak42/leuven/cpu-build.yml?branch=master?label=leuven%3A%20CPU-build%20%26%20tests&logo=github&logoColor=blue&style=plastic)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mnovak42/leuven/CUDA-ubuntu-build?label=leuven%3A%20CUDA%20build&logo=GitHub&logoColor=blue&style=plastic)
 ![Read the Docs](https://img.shields.io/readthedocs/leuven?label=leuven%3A%20doc%20&logo=read%20the%20docs&logoColor=white&style=plastic)
 
