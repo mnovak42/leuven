@@ -6,6 +6,10 @@
 
 ----
 
+Citation: ![_"Accelerated sparse Kernel Spectral Clustering for large scale data clustering problems"_](https://arxiv.org/abs/2310.13381)
+
+----
+
 # The `leuven` library and framework
 
 Framework, toolkit and **ready-to-use applications** for numerical linear algebra dependent machine learning algorithms. 
