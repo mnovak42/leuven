@@ -5,7 +5,7 @@
 ![Read the Docs](https://img.shields.io/readthedocs/leuven-ksc?label=applications-KSC%3A%20doc&logo=read%20the%20docs&logoColor=white&style=plastic)
 
 
-[![arXiv](https://img.shields.io/badge/arXiv-2310.13381-b31b1b.svg?label=Please%3A%20citate%3A%20arXiv)](https://arxiv.org/abs/2310.13381)
+[![arXiv](https://img.shields.io/badge/arXiv-2310.13381-b31b1b.svg?label=Citate%3A%20arXiv)](https://arxiv.org/abs/2310.13381)
 
 
 ----
