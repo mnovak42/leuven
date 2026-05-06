@@ -1,10 +1,10 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mnovak42/leuven/cpu_build.yml?branch=master&label=leuven%3A%20CPU-build%20%26%20tests&logo=github&logoColor=blue&style=plastic)
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/mnovak42/leuven/cuda-build.yml?branch=master&label=leuven%3A%20CUDA%20build&logo=github&logoColor=blue&style=plastic)
-
 ![Read the Docs](https://img.shields.io/readthedocs/leuven?label=leuven%3A%20doc&logo=readthedocs&logoColor=white&style=plastic)
 ![Read the Docs](https://img.shields.io/readthedocs/leuven-ksc?label=applications-KSC%3A%20doc&logo=readthedocs&logoColor=white&style=plastic)
 
 [![arXiv](https://img.shields.io/badge/arXiv-2310.13381-b31b1b.svg?label=To%20Cite%3A%20arXiv)](https://arxiv.org/abs/2310.13381)
+
 ----
 
 # The `leuven` library and framework
