@@ -31,8 +31,8 @@ Set (NETLIB_BLAS_SEARCH_LIBRARY_PATHS
 
 ################################################################################
 # Try to find the BLAS, LAPACK library using the paths (in our order)
-Find_library(NETLIB_BLAS_LIBRARY NAMES libblas blas PATHS ${NETLIB_BLAS_SEARCH_LIBRARY_PATHS} NO_DEFAULT_PATH)
-Find_library(NETLIB_LAPACK_LIBRARY NAMES liblapack lapack PATHS ${NETLIB_BLAS_SEARCH_LIBRARY_PATHS} NO_DEFAULT_PATH)
+Find_library(NETLIB_BLAS_LIBRARY NAMES libblas blas PATHS ${NETLIB_BLAS_SEARCH_LIBRARY_PATHS})
+Find_library(NETLIB_LAPACK_LIBRARY NAMES liblapack lapack PATHS ${NETLIB_BLAS_SEARCH_LIBRARY_PATHS})
 
 
 set (NETLIB_BLAS_LIBRARY 
