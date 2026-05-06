@@ -20,6 +20,7 @@ on:
       - '*.yml'
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,11 +31,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            cuda: "12.2"
+            cuda: "12.2.0"
             gcc: 11
 
           - os: ubuntu-22.04
-            cuda: "12.3"
+            cuda: "12.3.2"
             gcc: 12
 
     env:
@@ -44,17 +45,11 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install CUDA
-      env:
+      uses: Jimver/cuda-toolkit@v0.2.24
+      with:
         cuda: ${{ matrix.cuda }}
-      run: |
-        source ./testing/scripts/actions/install_cuda_ubuntu.sh
-        if [[ $? -eq 0 ]]; then
-          echo "Adding CUDA to CUDA_PATH, PATH and LD_LIBRARY_PATH"
-          echo "CUDA_PATH=${CUDA_PATH}" >> $GITHUB_ENV
-          echo "${CUDA_PATH}/bin" >> $GITHUB_PATH
-          echo "LD_LIBRARY_PATH=${CUDA_PATH}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-        fi
-      shell: bash
+        method: network
+        sub-packages: '["nvcc", "cudart", "cublas", "cublas-dev"]'
 
     - name: Install/Select gcc and g++
       run: |
@@ -70,6 +65,14 @@ jobs:
         echo "CXX=/usr/bin/g++-${{ matrix.gcc }}" >> $GITHUB_ENV
         echo "FC=/usr/bin/gfortran-${{ matrix.gcc }}" >> $GITHUB_ENV
         echo "CUDAHOSTCXX=/usr/bin/g++-${{ matrix.gcc }}" >> $GITHUB_ENV
+
+    - name: Show CUDA/compiler versions
+      run: |
+        which nvcc
+        nvcc --version
+        ${CC} --version
+        ${CXX} --version
+        ${FC} --version
 
     - name: Configure cmake (Debug)
       id: configure
