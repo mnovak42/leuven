@@ -32,10 +32,12 @@ jobs:
         include:
           - os: ubuntu-22.04
             cuda: "12.2.0"
+            cuda_short: "12-2"
             gcc: 11
 
           - os: ubuntu-22.04
             cuda: "12.3.2"
+            cuda_short: "12-3"
             gcc: 12
 
     env:
@@ -49,7 +51,14 @@ jobs:
       with:
         cuda: ${{ matrix.cuda }}
         method: network
-        sub-packages: '["nvcc", "cudart", "cublas", "cublas-dev"]'
+        sub-packages: '["nvcc", "cudart"]'
+
+    - name: Install cuBLAS
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libcublas-${{ matrix.cuda_short }} \
+          libcublas-dev-${{ matrix.cuda_short }}
 
     - name: Install/Select gcc and g++
       run: |
