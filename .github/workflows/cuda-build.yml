@@ -1,104 +1,83 @@
-# Builds CUDA-enabled code only.
-# GitHub-hosted runners do not provide an NVIDIA GPU, so this should not run CUDA device tests.
+# builds only since there is no device
 name: CUDA-ubuntu-build
 
 on:
   push:
-    branches: [ master ]
     paths-ignore:
       - 'README.md'
       - '.github/**'
       - 'docs/**'
       - 'apps/examples/KSC/docs/**'
       - '*.yml'
+    branches:
+      - master
   pull_request:
-    branches: [ master ]
     paths-ignore:
       - 'README.md'
       - '.github/**'
       - 'docs/**'
       - 'apps/examples/KSC/docs/**'
       - '*.yml'
+    branches:
+      - master
 
 jobs:
   build:
-    name: ubuntu-22.04-cuda-${{ matrix.cuda }}-gcc-${{ matrix.gcc }}
-    runs-on: ubuntu-22.04
-
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - cuda: "12.2.0"
+          - os: ubuntu-22.04
+            cuda: "12.2.0"
             gcc: 11
-            cc: gcc-11
-            cxx: g++-11
-            fc: gfortran-11
 
-          - cuda: "12.3.2"
+          - os: ubuntu-22.04
+            cuda: "12.3.2"
             gcc: 12
-            cc: gcc-12
-            cxx: g++-12
-            fc: gfortran-12
 
     env:
-      build_dir: build
+      build_dir: "build"
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            cmake \
-            ninja-build \
-            libblas-dev \
-            liblapack-dev \
-            ${{ matrix.cc }} \
-            ${{ matrix.cxx }} \
-            ${{ matrix.fc }}
+    - name: Install CUDA
+      env:
+        cuda: ${{ matrix.cuda }}
+      run: |
+        source ./testing/scripts/actions/install_cuda_ubuntu.sh
+        if [[ $? -eq 0 ]]; then
+          echo "Adding CUDA to CUDA_PATH, PATH and LD_LIBRARY_PATH"
+          echo "CUDA_PATH=${CUDA_PATH}" >> $GITHUB_ENV
+          echo "${CUDA_PATH}/bin" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${CUDA_PATH}/lib:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+        fi
+      shell: bash
 
-          echo "CC=/usr/bin/${{ matrix.cc }}" >> $GITHUB_ENV
-          echo "CXX=/usr/bin/${{ matrix.cxx }}" >> $GITHUB_ENV
-          echo "FC=/usr/bin/${{ matrix.fc }}" >> $GITHUB_ENV
-          echo "CUDAHOSTCXX=/usr/bin/${{ matrix.cxx }}" >> $GITHUB_ENV
+    - name: Install/Select gcc and g++
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          gcc-${{ matrix.gcc }} \
+          g++-${{ matrix.gcc }} \
+          gfortran-${{ matrix.gcc }} \
+          libblas-dev \
+          liblapack-dev
 
-      - name: Install CUDA Toolkit
-        uses: Jimver/cuda-toolkit@v0.2.24
-        with:
-          cuda: ${{ matrix.cuda }}
-          method: network
-          sub-packages: '["nvcc", "cudart", "cublas", "cublas-dev"]'
+        echo "CC=/usr/bin/gcc-${{ matrix.gcc }}" >> $GITHUB_ENV
+        echo "CXX=/usr/bin/g++-${{ matrix.gcc }}" >> $GITHUB_ENV
+        echo "FC=/usr/bin/gfortran-${{ matrix.gcc }}" >> $GITHUB_ENV
+        echo "CUDAHOSTCXX=/usr/bin/g++-${{ matrix.gcc }}" >> $GITHUB_ENV
 
-      - name: Show toolchain
-        run: |
-          which cmake
-          cmake --version
-          which nvcc
-          nvcc --version
-          ${CC} --version
-          ${CXX} --version
-          ${FC} --version
+    - name: Configure cmake (Debug)
+      id: configure
+      run: cmake . -B ${{ env.build_dir }} -DCMAKE_BUILD_TYPE=Debug -DUSE_CUBLAS=ON -DBUILD_TESTS=ON
 
-      - name: Configure Debug
-        id: configure_debug
-        run: |
-          cmake -B ${{ env.build_dir }} -S . \
-            -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DUSE_CUBLAS=ON \
-            -DBUILD_TESTS=ON \
-            -DCMAKE_C_COMPILER=${CC} \
-            -DCMAKE_CXX_COMPILER=${CXX} \
-            -DCMAKE_Fortran_COMPILER=${FC} \
-            -DCMAKE_CUDA_HOST_COMPILER=${CUDAHOSTCXX}
-
-      - name: Configure Error Processing
-        if: ${{ failure() && steps.configure_debug.outcome == 'failure' }}
-        working-directory: ${{ env.build_dir }}
-        run: |
+    - name: Configure Error Processing
+      if: ${{ failure() && steps.configure.outcome == 'failure' }}
+      working-directory: ${{ env.build_dir }}
+      run: |
           if [[ -f "CMakeFiles/CMakeOutput.log" ]]; then
             echo "---- CMakeFiles/CMakeOutput.log"
             cat CMakeFiles/CMakeOutput.log
@@ -110,5 +89,6 @@ jobs:
             echo "----"
           fi
 
-      - name: Build Debug
-        run: cmake --build ${{ env.build_dir }} --parallel --verbose
+    - name: Build (Debug)
+      working-directory: ${{ env.build_dir }}
+      run: cmake --build . --target all --verbose -j `nproc`
