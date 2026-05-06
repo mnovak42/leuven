@@ -25,31 +25,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Linux (stable baseline)
           - name: ubuntu-22.04-gcc-11
             os: ubuntu-22.04
             cc: gcc-11
             cxx: g++-11
+            blas_args: ""
 
           - name: ubuntu-22.04-gcc-12
             os: ubuntu-22.04
             cc: gcc-12
             cxx: g++-12
+            blas_args: ""
 
-          # macOS (current stable)
           - name: macos-15-clang
             os: macos-15
             cc: clang
             cxx: clang++
+            blas_args: "-DBLAS_LIBRARIES=/opt/homebrew/opt/openblas/lib/libopenblas.dylib -DLAPACK_LIBRARIES=/opt/homebrew/opt/openblas/lib/libopenblas.dylib"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # -------------------------
-      # Linux setup
-      # -------------------------
-      - name: Install dependencies (Linux)
+      - name: Install dependencies Linux
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
@@ -61,17 +59,11 @@ jobs:
             ${{ matrix.cc }} \
             ${{ matrix.cxx }}
 
-      # -------------------------
-      # macOS setup
-      # -------------------------
-      - name: Install dependencies (macOS)
+      - name: Install dependencies macOS
         if: runner.os == 'macOS'
         run: |
           brew install cmake ninja openblas || true
 
-      # -------------------------
-      # Debug build
-      # -------------------------
       - name: Configure Debug
         run: |
           cmake -B build-debug -S . \
@@ -79,7 +71,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
             -DCMAKE_C_COMPILER=${{ matrix.cc }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            ${{ matrix.blas_args }}
 
       - name: Build Debug
         run: cmake --build build-debug --parallel
@@ -87,9 +80,6 @@ jobs:
       - name: Test Debug
         run: ctest --test-dir build-debug -j2 --verbose --output-on-failure
 
-      # -------------------------
-      # Release build
-      # -------------------------
       - name: Configure Release
         run: |
           cmake -B build-release -S . \
@@ -97,7 +87,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=ON \
             -DCMAKE_C_COMPILER=${{ matrix.cc }} \
-            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            ${{ matrix.blas_args }}
 
       - name: Build Release
         run: cmake --build build-release --parallel
